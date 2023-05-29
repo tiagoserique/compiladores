@@ -1,0 +1,47 @@
+
+
+* *******************************************************
+* Interpretador MEPA
+* Autor: Bruno Muller Junior (Set/2020)
+* Licença: GNU GPL
+* *******************************************************
+
+Arquivos:
+
+1) Módulo analise lexica/sintática
+
+   - Faz a análise léxica e sintática do arquivo de entrada e
+     armazenam na estrutura interna de armazenamento das instruções
+     (MV_mepa), especificamente na variável global mv_mepa (definidas
+     no arquivo "MV_mepa.h".
+
+   - O programa principal reside no arquivo "leMepa.y".
+
+   1.1) leMepa.l : Analisador léxico (flex) .
+   1.2) leMepa.y : Analisador sintático (bison).
+   1.3) leMepa.h : Estruturas de dados comuns a este módulo
+
+
+2) Módulo de interface com o usuário.
+
+   - contém todos os mecanismos de interação com usuário e de
+     impressão dos resultados na tela.
+
+   2.1) interface_usuario.h : Procedimentos e estruturas de dados
+                              exportados por este módulo.
+   2.2) interface_usuario.c : Implementação dos mesmos.
+
+
+3) Módulo de operação da máquina Virtual.
+
+   - Tipo abstrato de dados que representa a máquina virtual
+     MEPA. Contém as estruturas de dados e procedimentos de acesso às
+     mesmas.
+
+   3.1) MV_mepa.h :  Procedimentos e estruturas de dados
+                     exportados por este módulo.
+   3.2) MV_mepa.c :  Implementação dos mesmos.
+
+
+
+   

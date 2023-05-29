@@ -1,0 +1,33 @@
+
+1) Para instalar flex bison:
+> sudo apt-get install libfl-dev flex bison
+
+
+2) Para gerar o executável:
+> make
+
+3) Para visualizar opções:
+> ./executaMepa -h
+   
+4) Para executar o arquivo "MEPA"
+> ./executaMepa 
+
+5) Para executar o arquivo "MEPA-5"
+> ./executaMepa  -i MEPA-5
+
+6)  Para executar em modo não interativo
+> ./executaMepa -r
+   
+Exemplo: Executa o arquivo "MEPA-5" em modo não interativo
+> ./executaMepa  -r -i MEPA-5
+-----------------------------------------
+ Arquivo de entrada: MEPA-5                  
+ Modo Interativo:    nao                  
+ Iniciando Execução                      
+-----------------------------------------
+(entrada):4
+saida: 4  
+saida: 3  
+execução finalizada
+>
+
