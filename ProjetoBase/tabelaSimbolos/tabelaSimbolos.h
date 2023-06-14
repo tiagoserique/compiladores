@@ -10,15 +10,16 @@ typedef struct TabelaSimbolos {
 } TabelaSimbolos;
 
 
-void inicializa(TabelaSimbolos *ts);
+void inicializa(TabelaSimbolos **ts);
 
-void push(TabelaSimbolos *ts, Simbolo s);
+void push(TabelaSimbolos **ts, Simbolo s);
 
-Simbolo pop(TabelaSimbolos *ts);
+Simbolo pop(TabelaSimbolos **ts);
 
-void removeN(TabelaSimbolos *ts, int n);
+void removeN(TabelaSimbolos **ts, int n);
 
-void atribuiTipo(TabelaSimbolos *ts, int categoria, int tipo, int qtd);
+void atribuiTipo(TabelaSimbolos **ts, int categoria, int tipo, int qtd);
 
+Simbolo *busca(TabelaSimbolos **ts, const char *nome);
 
 #endif

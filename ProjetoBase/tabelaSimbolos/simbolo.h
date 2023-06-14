@@ -14,12 +14,12 @@ typedef enum tipoVariavel {
     FLOAT,
     BOOLEAN,
     UNDEFINED_TYPE
-} enumTipoSimbolo;
+} tipoVariavel;
 
 typedef enum tipoPassagem {
     COPIA,
     REFERENCIA
-} enumTipoSimbolo;
+} tipoPassagem;
 
 
 // tipos de simbolos
@@ -36,7 +36,7 @@ typedef struct parametro {
 } parametro;
 
 typedef struct procedimento {
-    int rotulo;
+    char *rotulo;
     int qtdParametros;
     parametro lista[128];
 } procedimento;
@@ -52,11 +52,11 @@ typedef struct tipoConteudo {
 
 typedef struct Simbolo {
     char *identificador;
-    int categoria;
+    int categoria; // variaveis simples, parametros formais simples, procedimentos 
     int nivel;
     tipoConteudo conteudo;
 } Simbolo;
 
-Simbolo criaSimbolo(char *id, int cat, int nivel, int tipo, tipoConteudo Conteudo);
+Simbolo criaSimbolo(char *id, int cat, int nivel, tipoConteudo Conteudo);
 
 #endif

@@ -4,7 +4,7 @@
 
 #include "simbolo.h"
 
-Simbolo criaSimbolo(char *id, int cat, int nivel, int tipo, tipoConteudo conteudo){
+Simbolo criaSimbolo(char *id, int cat, int nivel, tipoConteudo conteudo){
     Simbolo s;
     
     s.identificador = malloc(strlen(id)+1);
