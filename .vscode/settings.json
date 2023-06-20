@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "*.y": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "simbolo.h": "c",
+        "tabelasimbolos.h": "c"
     }
 }

@@ -3,8 +3,23 @@
 #include "tabelaSimbolos.h"
 #include <string.h> 
 
-// Função que inicializa a tabela de símbolos
-void inicializa(TabelaSimbolos **ts){
+
+char *imprimeTipo(int tipo){
+    switch (tipo){
+        case TIPO_INTEGER:
+            return "integer";
+        case TIPO_FLOAT:
+            return "float";
+        case TIPO_BOOLEAN:
+            return "boolean";
+        case TIPO_UNDEFINED_TYPE:
+            return "undefined";
+        default:
+            return "undefined";
+    }
+}
+
+void inicializaTabelaSimbolos(TabelaSimbolos **ts){
     *ts = (TabelaSimbolos *) malloc(sizeof(TabelaSimbolos));
     (*ts)->simbolos = malloc(sizeof(Simbolo));
     (*ts)->quantidade = 0;
@@ -13,7 +28,7 @@ void inicializa(TabelaSimbolos **ts){
     return;
 }
 
-void push(TabelaSimbolos **ts, Simbolo s){
+void pushTabelaSimbolos(TabelaSimbolos **ts, Simbolo s){
     int i;
     (*ts)->quantidade++;
     
@@ -29,7 +44,7 @@ void push(TabelaSimbolos **ts, Simbolo s){
     return;
 }
 
-Simbolo pop(TabelaSimbolos **ts){
+Simbolo popTabelaSimbolos(TabelaSimbolos **ts){
     int i;
     Simbolo s;
 
@@ -45,7 +60,7 @@ Simbolo pop(TabelaSimbolos **ts){
     return s;
 }
 
-void removeN(TabelaSimbolos **ts, int n){
+void removeNTabelaSimbolos(TabelaSimbolos **ts, int n){
     if ( (*ts)->quantidade == 0 ){
         printf("Tabela de símbolos vazia!\n");
         exit(1);
@@ -56,24 +71,24 @@ void removeN(TabelaSimbolos **ts, int n){
     return;
 }
 
-void atribuiTipo(TabelaSimbolos **ts, int categoria, int tipo, int qtd){
-    int i;
+void atribuiTipoTabelaSimbolos(TabelaSimbolos **ts, int categoria, int tipo, int qtd){
+    int i, total;
 
     if ( (*ts)->quantidade == 0 ){
         printf("Tabela de símbolos vazia!\n");
         exit(1);
     }
 
-    i = (*ts)->quantidade - 1;
+    total = (*ts)->quantidade;
 
-    for (; i < qtd; i++){
-        (*ts)->simbolos[i - 1].conteudo.var.tipo = tipo;
+    for (i = 1; i <= qtd; i++){
+        (*ts)->simbolos[total - i].conteudo.var.tipo = tipo;
     }
 
     return;
 }
 
-Simbolo *busca(TabelaSimbolos **ts, const char *nome){
+Simbolo *buscaTabelaSimbolos(TabelaSimbolos **ts, const char *nome){
     int i = (*ts)->quantidade - 1;
 
     while ( i >= 0 ){
@@ -82,4 +97,21 @@ Simbolo *busca(TabelaSimbolos **ts, const char *nome){
     }
 
     return NULL;
+}
+
+void imprimeTabelaSimbolos(TabelaSimbolos **ts){
+    int i;
+    printf("\nTabela de símbolos:\n");
+    for (i = (*ts)->quantidade - 1; i >= 0 ; i--){
+        Simbolo *atual = &( (*ts)->simbolos[i] );
+        fprintf(stderr, "Ident: %s \t|| Cat: %d || Nível: %d || Tipo: %s || Deslocamento: %d\n", 
+            atual->identificador, 
+            atual->categoria, 
+            atual->nivel,
+            imprimeTipo(atual->conteudo.var.tipo),
+            atual->conteudo.var.deslocamento);
+    }
+    printf("\n");
+
+    return;
 }

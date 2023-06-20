@@ -22,4 +22,6 @@ int vaziaPilhaInt(PilhaInt *p);
 
 void destroiPilhaInt(PilhaInt *p);
 
+void imprimePilhaInt(PilhaInt *p);
+
 #endif

@@ -12,25 +12,27 @@
 #include "tabelaSimbolos/tabelaSimbolos.h"
 #include "tabelaSimbolos/simbolo.h"
 #include "pilha/pilhaInt.h"
+#include "pilha/pilhaSimbolos.h"
+
 
 TabelaSimbolos *ts, *pilhaAtribuicao;
 tipoConteudo conteudo;
 Simbolo s;
 PilhaInt pilhaRotulos, pilhaAmem, pilhaProcs;
+PilhaSimbolos pilhaVarAEsquerda;
 
 int num_vars;
 int num_params;
 int nivel_lexico;
 int rotulo_atual;
 int quantidade_tipo_atual;
-int elem_a_esq;
 
 char mepa_comand[128];
 
 int str2type(const char *str){
-   if (!strcmp(str, "integer")) return INTEGER;
-   if (!strcmp(str, "boolean")) return BOOLEAN;
-   return UNDEFINED_TYPE;
+   if (!strcmp(str, "integer")) return TIPO_INTEGER;
+   if (!strcmp(str, "boolean")) return TIPO_BOOLEAN;
+   return TIPO_UNDEFINED_TYPE;
 }
 
 %}
@@ -54,6 +56,22 @@ int str2type(const char *str){
 %token ABRE_COLCHETES FECHA_COLCHETES 
 %token ABRE_CHAVES FECHA_CHAVES
 
+%union {
+   char *str;
+   int int_val;
+}
+
+%type <str> relacao
+%type <str> mais_menos_or
+%type <str> mais_menos_ou_nada
+%type <str> vezes_div_and
+%type <int_val> expressao
+%type <int_val> expressao_simples
+%type <int_val> fator
+%type <int_val> tipo 
+%type <int_val> atribuicao
+%type <int_val> termo
+// %type <int_xval> declara_var
 
 %%
 
@@ -87,8 +105,9 @@ bloco:
       comando_composto
 
       {
+         imprimeTabelaSimbolos(&ts);
          sprintf(mepa_comand, "DMEM %d", topoPilhaInt(&pilhaAmem));
-         removeN(&ts, topoPilhaInt(&pilhaAmem));
+         removeNTabelaSimbolos(&ts, topoPilhaInt(&pilhaAmem));
          geraCodigo(NULL, mepa_comand);
          popPilhaInt(&pilhaAmem);
       }
@@ -111,7 +130,8 @@ parte_declara_vars:
 ;
 
 // regra 09 ====================================================================
-declara_vars: declara_vars declara_var
+declara_vars: 
+            declara_vars declara_var
             | declara_var
 ;
 
@@ -120,7 +140,14 @@ declara_var:
             
             lista_id_var DOIS_PONTOS tipo
             
-            { atribuiTipo(&ts, VARIAVEL, $4, quantidade_tipo_atual); }
+            { 
+               if ( $4 == TIPO_UNDEFINED_TYPE ){
+                  fprintf(stderr, "COMPILATION ERROR!!! Tipo indefinido\n");
+                  exit(1);
+               }
+
+               atribuiTipoTabelaSimbolos(&ts, CAT_VARIAVEL, $4, quantidade_tipo_atual); 
+            }
 
             PONTO_E_VIRGULA
 ;
@@ -134,21 +161,22 @@ lista_id_var:
             lista_id_var VIRGULA IDENT
             { 
                conteudo.var.deslocamento = num_vars;
-               s = criaSimbolo(token, VARIAVEL, nivel_lexico, conteudo);
-               push(&ts, s);
+               s = criaSimbolo(token, CAT_VARIAVEL, nivel_lexico, conteudo);
+               pushTabelaSimbolos(&ts, s);
                num_vars++; quantidade_tipo_atual++;
             }
             
             | IDENT 
             {
                conteudo.var.deslocamento = num_vars;
-               s = criaSimbolo(token, VARIAVEL, nivel_lexico, conteudo);
-               push(&ts, s);
+               s = criaSimbolo(token, CAT_VARIAVEL, nivel_lexico, conteudo);
+               pushTabelaSimbolos(&ts, s);
                num_vars++; quantidade_tipo_atual++;      
             }
 ;
 
-lista_idents: lista_idents VIRGULA IDENT
+lista_idents: 
+            lista_idents VIRGULA IDENT
             | IDENT
 ;
 
@@ -183,9 +211,12 @@ lista_idents: lista_idents VIRGULA IDENT
 
 // regra 16 ====================================================================
 comando_composto: T_BEGIN comandos T_END
+// comando_composto: T_BEGIN comandos { imprime(&ts); } T_END
+// comando_composto: T_BEGIN comandos { imprimePilhaInt(&pilhaAmem); } T_END
 ;
 
-comandos: comandos PONTO_E_VIRGULA comando
+comandos: 
+         comandos PONTO_E_VIRGULA comando
          | comando
 ;
 
@@ -195,98 +226,268 @@ comando: comando_sem_rotulo
 
 // regra 18 ====================================================================
 comando_sem_rotulo: 
-   atribuicao
-   | comando_composto
-   // | escrita
-   // | leitura
-   // | chamada_de_procedimento
-   // | comando_condicional
-   // | comando_repetitivo
-   |
+                  atribuicao
+                  | comando_composto
+                  | leitura
+                  | escrita
+                  // | chamada_de_procedimento
+                  // | comando_condicional
+                  // | comando_repetitivo
+                  |
+;
+
+leitura: READ ABRE_PARENTESES leitura_itens FECHA_PARENTESES
+
+leitura_itens: 
+               leitura_itens VIRGULA item_leitura
+               | item_leitura
+
+item_leitura: 
+            IDENT 
+            {
+               geraCodigo(NULL, "LEIT");
+               Simbolo *s = buscaTabelaSimbolos(&ts, token);
+               if ( s == NULL || s->categoria == CAT_PROCEDIMENTO ){
+                  fprintf(stderr, "COMPILATION ERROR!!! variavel nao declarada\n");
+                  exit(1);
+               }
+
+               sprintf(mepa_comand, "ARMZ %d, %d", s->nivel, s->conteudo.var.deslocamento);
+               geraCodigo(NULL, mepa_comand);
+            }
+;
+
+escrita: WRITE ABRE_PARENTESES escrita_itens FECHA_PARENTESES
+;
+
+escrita_itens: 
+               escrita_itens VIRGULA item_escrita
+               | item_escrita
+;
+
+item_escrita:  
+            expressao
+            {
+               geraCodigo(NULL, "IMPR");
+            }
 ;
 
 // regra 19 ====================================================================
-atribuicao: variavel ATRIBUICAO expressao
+atribuicao: 
+         variavel ATRIBUICAO expressao
+         {
+
+            Simbolo *s = topoPilhaSimbolos(&pilhaVarAEsquerda);
+
+            if ( s->categoria == CAT_VARIAVEL 
+               && s->conteudo.var.tipo != $3 ){
+               fprintf(stderr, "COMPILATION ERROR!!! Atribuicao de tipos divergentes\n");
+               // fprintf(stderr, "Ident: %s\n", s->identificador);
+               // fprintf(stderr, "Tipo da variavel: %d\n", s->conteudo.var.tipo);
+               // fprintf(stderr, "Tipo da expressao: %d\n", $3);
+               // imprimeTabelaSimbolos(&ts);
+               exit(1);
+            }
+   
+            sprintf(mepa_comand, "ARMZ %d, %d", s->nivel, s->conteudo.var.deslocamento);
+            geraCodigo(NULL, mepa_comand);
+
+            popPilhaSimbolos(&pilhaVarAEsquerda);
+         }
 ;
 
+// regra 20 ====================================================================
 // // TODO: fazer
 // chamada_de_procedimento: IDENT lista_expressoes
 // ;
 
+// regra 21 ====================================================================
 // // TODO: fazer
 // comando_composto: 
 // ;
 
+// regra 22 ====================================================================
 // // TODO: fazer
 // comando_condicional: IF expressao THEN comando_sem_rotulo 
 //    ELSE comando_sem_rotulo
 // ;
 
-// // TODO: fazer
-// comando_repetitivo: WHILE expressao DO comando_sem_rotulo
+// regra 23 ====================================================================
+// TODO: fazer
+// comando_repetitivo: 
+//                   WHILE expressao DO 
+//                   comando_sem_rotulo
 // ;
 
+// regra 24 ====================================================================
 // // TODO: fazer
 // lista_expressoes: expressao VIRGULA expressao
 // ;
 
 // regra 25 ====================================================================
-expressao: expressao_simples relacao_e_expressao_ou_nada
-;
+expressao: 
+         expressao_simples { $$ = $1; }
+         | expressao_simples relacao expressao_simples 
+            { 
+               if ( $1 != $3 ){
+                  fprintf(stderr, "COMPILATION ERROR!!! Comparacao de tipos divergentes\n");
+                  exit(1);
+               }
 
-relacao_e_expressao_ou_nada: relacao expressao_simples
-                              |
+               geraCodigo(NULL, $2);
+               $$ = TIPO_BOOLEAN;
+            }
 ;
 
 // regra 26 ====================================================================
-relacao: IGUAL       { geraCodigo(NULL, "CMIG"); }
-      | DIFERENTE    { geraCodigo(NULL, "CMDG"); }
-      | MENOR        { geraCodigo(NULL, "CMME"); }
-      | MENOR_IGUAL  { geraCodigo(NULL, "CMEG"); }
-      | MAIOR        { geraCodigo(NULL, "CMMA"); }
-      | MAIOR_IGUAL  { geraCodigo(NULL, "CMAG"); }
+relacao: 
+      IGUAL          { $$ = "CMIG"; }
+      | DIFERENTE    { $$ = "CMDG"; }
+      | MENOR        { $$ = "CMME"; }
+      | MENOR_IGUAL  { $$ = "CMEG"; }
+      | MAIOR        { $$ = "CMMA"; }
+      | MAIOR_IGUAL  { $$ = "CMAG"; }
 ;
 
 // regra 27 ====================================================================
-expressao_simples: expressao_simples mais_menos_or termo
-                  | mais_ou_menos_ou_nada termo 
+expressao_simples: 
+                  expressao_simples mais_menos_or termo
+                  {
+                     if ( !strcmp("MAIS", $2) && $3 == TIPO_INTEGER ){
+                        geraCodigo(NULL, "SOMA");
+                        $$ = TIPO_INTEGER;
+                     }
+                     else if ( !strcmp("MENOS", $2) && $3 == TIPO_INTEGER ){
+                        geraCodigo(NULL, "SUBT");
+                        $$ = TIPO_INTEGER;
+                     }
+                     else if ( !strcmp("OR", $2) && $3 == TIPO_BOOLEAN ){
+                        geraCodigo(NULL, "DISJ");
+                        $$ = TIPO_BOOLEAN;
+                     }
+                  }
+                  
+                  | mais_menos_ou_nada termo 
+                  {
+                     if ( !strcmp("NADA", $1) ){ 
+                        $$ = $2; 
+                     }
+                     else if ( $2 == TIPO_INTEGER ){
+                        if ( !strcmp("MENOS", $1) ){ 
+                           geraCodigo(NULL, "INVR");
+                        }
+
+                        $$ = TIPO_INTEGER;
+                     }
+                     else {
+                        fprintf(stderr, "COMPILATION ERROR!!!"
+                           " Operadores aritmeticos aplicados a tipo booleano\n");
+                        exit(1);
+                     }
+                  }
 ;
 
-mais_ou_menos_ou_nada: MAIS 
-                     | MENOS
-                     |
+mais_menos_ou_nada: 
+                  MAIS  { $$ = "MAIS"; }
+                  | MENOS { $$ = "MENOS"; }
+                  |       { $$ = "NADA"; }
 ;
 
-mais_menos_or: MAIS { geraCodigo(NULL, "SOMA"); }
-            | MENOS { geraCodigo(NULL, "SUBT"); }
-            | OR    { geraCodigo(NULL, "DISJ"); }
+mais_menos_or: 
+            MAIS { $$ = "MAIS";  } 
+            | MENOS { $$ = "MENOS"; } 
+            | OR    { $$ = "OR";    } 
 ;
 
 // regra 28 ====================================================================
-termo: termo vezes_div_and fator
-     | fator
+termo: 
+      termo vezes_div_and fator 
+      {
+         if ( TIPO_BOOLEAN == $3 ){
+            if ( !strcmp("CONJ", $2) ){
+               geraCodigo(NULL, "CONJ");
+            }
+            else {
+               fprintf(stderr, "COMPILATION ERROR!!!"
+                  " Operacao invalida para tipo booleano\n");
+            }
+         }
+         else if ( TIPO_INTEGER == $3 ){
+            if ( !strcmp("MULT", $2) ){
+               geraCodigo(NULL, "MULT");
+            }
+            else if ( !strcmp("DIVI", $2) ){
+               geraCodigo(NULL, "DIVI");
+            }
+            else {
+               fprintf(stderr, "COMPILATION ERROR!!!"
+                  " Operacao invalida para tipo integer\n");
+
+            }
+         }
+
+         $$ = $3;
+      }
+     | fator { $$ = $1; }
 ;
 
-vezes_div_and: VEZES { geraCodigo(NULL, "MULT"); } 
-               | DIV { geraCodigo(NULL, "DIVI"); } 
-               | AND { geraCodigo(NULL, "CONJ"); }
+vezes_div_and: 
+               VEZES { $$ = "MULT"; } 
+               | DIV { $$ = "DIVI"; } 
+               | AND { $$ = "CONJ"; }
 ;
 
 // regra 29 ====================================================================
-fator: variavel
+fator: 
+      variavel
+         {
+            Simbolo *s = topoPilhaSimbolos(&pilhaVarAEsquerda);
+
+            sprintf(mepa_comand, "CRVL %d, %d", s->nivel, s->conteudo.var.deslocamento);
+            geraCodigo(NULL, mepa_comand);
+
+            popPilhaSimbolos(&pilhaVarAEsquerda);
+         }
       | NUMERO 
          { 
+            $$ = TIPO_INTEGER;
             sprintf(mepa_comand, "CRCT %d", atoi(token)); 
             geraCodigo(NULL, mepa_comand);
          }
-      | VALOR_BOOL
-      | ABRE_PARENTESES expressao FECHA_PARENTESES
+      | VALOR_BOOL 
+         { 
+            $$ = TIPO_BOOLEAN; 
+            sprintf(mepa_comand, "CRCT %d", !strcmp(token, "True") ? 1 : 0);
+            geraCodigo(NULL, mepa_comand);
+         }
+      | ABRE_PARENTESES expressao FECHA_PARENTESES { $$ = $2; }
       | NOT fator
+         {
+            if ( $2 != TIPO_BOOLEAN ){
+               fprintf(stderr, "COMPILATION ERROR!!!"
+                  " Operador NOT aplicado a tipo nao booleano\n");
+               exit(1);
+            }
+
+            $$ = TIPO_BOOLEAN;
+            geraCodigo(NULL, "NEGA");
+         }
+      // | chamada_de_funcao
 ;
 
-// // TODO: fazer
-variavel: IDENT
-//    | IDENT lista_expressoes
+// regra 30 ====================================================================
+variavel: 
+         IDENT
+         {
+            Simbolo *s = buscaTabelaSimbolos(&ts, token);
+
+            if ( s == NULL ){
+               fprintf(stderr, "COMPILATION ERROR!!! variavel nao declarada\n");
+               exit(1);
+            }
+
+            pushPilhaSimbolos(&pilhaVarAEsquerda, s);
+         }
 ;
 
 
@@ -316,11 +517,12 @@ int main (int argc, char** argv) {
  *  Inicia a Tabela de S�mbolos
  * ------------------------------------------------------------------- */
 
-   inicializa(&ts);
-   inicializa(&pilhaAtribuicao);
+   inicializaTabelaSimbolos(&ts);
+   inicializaTabelaSimbolos(&pilhaAtribuicao);
    inicializaPilhaInt(&pilhaRotulos);
    inicializaPilhaInt(&pilhaAmem);
    inicializaPilhaInt(&pilhaProcs);
+   inicializaPilhaSimbolos(&pilhaVarAEsquerda);
 
    yyin=fp;
    yyparse();
@@ -328,6 +530,14 @@ int main (int argc, char** argv) {
    destroiPilhaInt(&pilhaRotulos);
    destroiPilhaInt(&pilhaAmem);
    destroiPilhaInt(&pilhaProcs);
+   destroiPilhaSimbolos(&pilhaVarAEsquerda);
 
    return 0;
 }
+
+
+// gere a regra sintatica para o comando de atribuicao
+
+
+
+

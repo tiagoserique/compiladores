@@ -1,6 +1,26 @@
      INPP
-     AMEM 4
+     AMEM 6
      CRCT 0
+     ARMZ 0, 0
      CRCT 10
-     DMEM 4
+     ARMZ 0, 4
+     LEIT
+     ARMZ 0, 0
+     CRCT 10
+     CRCT 1
+     SOMA
+     IMPR
+     CRVL 0, 0
+     IMPR
+     CRVL 0, 4
+     IMPR
+     CRVL 0, 0
+     CRVL 0, 1
+     CMMA
+     CRVL 0, 1
+     CRVL 0, 2
+     CMIG
+     CONJ
+     ARMZ 0, 5
+     DMEM 6
      PARA

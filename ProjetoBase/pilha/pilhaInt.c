@@ -54,3 +54,14 @@ void destroiPilhaInt(PilhaInt *p){
     return;
 }
 
+void imprimePilhaInt(PilhaInt *p){
+    int i;
+
+    printf("Pilha de inteiros:\n");
+    for (i = 0; i < p->topo; i++){
+        printf("%d ", p->dados[i]);
+    }
+    printf("\n");
+
+    return;
+}

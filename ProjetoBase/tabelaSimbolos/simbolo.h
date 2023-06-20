@@ -3,22 +3,22 @@
 
 
 typedef enum enumTipoSimbolo {
-    VARIAVEL,
-    PARAMETRO,
-    PROCEDIMENTO,
-    FUNCAO
+    CAT_VARIAVEL,
+    CAT_PARAMETRO,
+    CAT_PROCEDIMENTO,
+    CAT_FUNCAO
 } enumTipoSimbolo;
 
 typedef enum tipoVariavel {
-    INTEGER,
-    FLOAT,
-    BOOLEAN,
-    UNDEFINED_TYPE
+    TIPO_INTEGER,
+    TIPO_FLOAT,
+    TIPO_BOOLEAN,
+    TIPO_UNDEFINED_TYPE
 } tipoVariavel;
 
 typedef enum tipoPassagem {
-    COPIA,
-    REFERENCIA
+    PAS_COPIA,
+    PAS_REFERENCIA
 } tipoPassagem;
 
 
