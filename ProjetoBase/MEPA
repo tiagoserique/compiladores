@@ -1,5 +1,10 @@
      INPP
-     AMEM 6
+     AMEM 3
+     AMEM 2
+     AMEM 1
+     AMEM 3
+     DSVS R00
+R00: NADA 
      CRCT 0
      ARMZ 0, 0
      CRCT 10
@@ -22,5 +27,32 @@
      CMIG
      CONJ
      ARMZ 0, 5
-     DMEM 6
+     LEIT
+     ARMZ 0, 6
+     LEIT
+     ARMZ 0, 7
+     CRCT 0
+     ARMZ 0, 8
+R01: NADA 
+     CRVL 0, 6
+     CRVL 0, 7
+     CMEG
+     DSVF R02
+     CRVL 0, 8
+     CRVL 0, 6
+     CRVL 0, 6
+     MULT
+     SOMA
+     ARMZ 0, 8
+     CRVL 0, 6
+     IMPR
+     CRVL 0, 8
+     IMPR
+     CRVL 0, 6
+     CRCT 1
+     SOMA
+     ARMZ 0, 6
+     DSVS R01
+R02: NADA 
+     DMEM 9
      PARA

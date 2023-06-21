@@ -24,7 +24,7 @@ PilhaSimbolos pilhaVarAEsquerda;
 int num_vars;
 int num_params;
 int nivel_lexico;
-int rotulo_atual;
+int rotulo_atual = 0;
 int quantidade_tipo_atual;
 
 char mepa_comand[128];
@@ -95,22 +95,31 @@ programa:
 // regra 02 ====================================================================
 bloco:
       parte_declara_vars
-      {
-      }
+         {
+            pushPilhaInt(&pilhaRotulos, rotulo_atual);
 
-   //   parte_declara_subrotinas
-   //   {
-   //   }
+            sprintf(mepa_comand, "DSVS R%02d", rotulo_atual);
+            geraCodigo(NULL, mepa_comand);
+
+            rotulo_atual++;
+         }
+
+      // parte_declara_subrotinas
+         {
+            sprintf(mepa_comand, "R%02d", topoPilhaInt(&pilhaRotulos));
+            geraCodigo(mepa_comand, "NADA");
+
+            popPilhaInt(&pilhaRotulos);
+         }
 
       comando_composto
-
-      {
-         imprimeTabelaSimbolos(&ts);
-         sprintf(mepa_comand, "DMEM %d", topoPilhaInt(&pilhaAmem));
-         removeNTabelaSimbolos(&ts, topoPilhaInt(&pilhaAmem));
-         geraCodigo(NULL, mepa_comand);
-         popPilhaInt(&pilhaAmem);
-      }
+         {
+            imprimeTabelaSimbolos(&ts);
+            sprintf(mepa_comand, "DMEM %d", topoPilhaInt(&pilhaAmem));
+            removeNTabelaSimbolos(&ts, topoPilhaInt(&pilhaAmem));
+            geraCodigo(NULL, mepa_comand);
+            popPilhaInt(&pilhaAmem);
+         }
 ;
 
 // regra 08 ====================================================================
@@ -120,9 +129,6 @@ parte_declara_vars:
                   VAR declara_vars
                   
                   {
-                     sprintf(mepa_comand, "AMEM %d", num_vars); 
-                     geraCodigo(NULL, mepa_comand);
-
                      pushPilhaInt(&pilhaAmem, num_vars);
                   }
 
@@ -145,6 +151,9 @@ declara_var:
                   fprintf(stderr, "COMPILATION ERROR!!! Tipo indefinido\n");
                   exit(1);
                }
+
+               sprintf(mepa_comand, "AMEM %d", quantidade_tipo_atual); 
+               geraCodigo(NULL, mepa_comand);
 
                atribuiTipoTabelaSimbolos(&ts, CAT_VARIAVEL, $4, quantidade_tipo_atual); 
             }
@@ -232,7 +241,7 @@ comando_sem_rotulo:
                   | escrita
                   // | chamada_de_procedimento
                   // | comando_condicional
-                  // | comando_repetitivo
+                  | comando_repetitivo
                   |
 ;
 
@@ -314,10 +323,35 @@ atribuicao:
 
 // regra 23 ====================================================================
 // TODO: fazer
-// comando_repetitivo: 
-//                   WHILE expressao DO 
-//                   comando_sem_rotulo
-// ;
+comando_repetitivo: 
+                  WHILE 
+                     {
+                        pushPilhaInt(&pilhaRotulos, rotulo_atual);
+
+                        sprintf(mepa_comand, "R%02d", rotulo_atual);
+                        geraCodigo(mepa_comand, "NADA");
+
+                        rotulo_atual += 2;
+                     }
+                  expressao 
+                     {
+                        sprintf(mepa_comand, "DSVF R%02d", topoPilhaInt(&pilhaRotulos) + 1);
+                        geraCodigo(NULL, mepa_comand);
+                     }                  
+                  
+                  DO comando_sem_rotulo
+                     {
+                        sprintf(mepa_comand, "DSVS R%02d", topoPilhaInt(&pilhaRotulos));
+                        geraCodigo(NULL, mepa_comand);
+
+                        sprintf(mepa_comand, "R%02d", topoPilhaInt(&pilhaRotulos) + 1);
+                        geraCodigo(mepa_comand, "NADA");
+
+                        popPilhaInt(&pilhaRotulos);
+
+                        rotulo_atual -= 2;
+                     }
+;
 
 // regra 24 ====================================================================
 // // TODO: fazer
