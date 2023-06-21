@@ -71,7 +71,9 @@ int str2type(const char *str){
 %type <int_val> tipo 
 %type <int_val> atribuicao
 %type <int_val> termo
-// %type <int_xval> declara_var
+
+%nonassoc LOWER_THAN_ELSE
+%nonassoc ELSE
 
 %%
 
@@ -115,6 +117,7 @@ bloco:
       comando_composto
          {
             imprimeTabelaSimbolos(&ts);
+            imprimePilhaInt(&pilhaRotulos);
             sprintf(mepa_comand, "DMEM %d", topoPilhaInt(&pilhaAmem));
             removeNTabelaSimbolos(&ts, topoPilhaInt(&pilhaAmem));
             geraCodigo(NULL, mepa_comand);
@@ -225,8 +228,15 @@ comando_composto: T_BEGIN comandos T_END
 ;
 
 comandos: 
-         comandos PONTO_E_VIRGULA comando
-         | comando
+         comandos 
+            { 
+               if ( strcmp(token,";") ){ 
+                  fprintf(stderr, "COMPILATION ERROR!!! Falta de ; apos comando\n");
+                  exit(1);
+               }
+            } 
+         PONTO_E_VIRGULA  comando 
+         | comando 
 ;
 
 // regra 17 ====================================================================
@@ -240,7 +250,7 @@ comando_sem_rotulo:
                   | leitura
                   | escrita
                   // | chamada_de_procedimento
-                  // | comando_condicional
+                  | comando_condicional
                   | comando_repetitivo
                   |
 ;
@@ -316,10 +326,46 @@ atribuicao:
 // ;
 
 // regra 22 ====================================================================
-// // TODO: fazer
-// comando_condicional: IF expressao THEN comando_sem_rotulo 
-//    ELSE comando_sem_rotulo
-// ;
+// TODO: fazer
+comando_condicional: if_then cond_else 
+                     {
+                        popPilhaInt(&pilhaRotulos);
+                        rotulo_atual -= 2;
+                     }
+;
+
+if_then: 
+      IF expressao 
+         {
+            sprintf(mepa_comand, "DSVF R%02d", rotulo_atual);
+            geraCodigo(NULL, mepa_comand);
+
+            pushPilhaInt(&pilhaRotulos, rotulo_atual);
+            rotulo_atual += 2;
+         }
+      
+      THEN comando_sem_rotulo
+         {
+            sprintf(mepa_comand, "DSVS R%02d", topoPilhaInt(&pilhaRotulos) + 1);
+            geraCodigo(NULL, mepa_comand);
+         }
+;
+
+cond_else: 
+         ELSE 
+            {
+               sprintf(mepa_comand, "R%02d", topoPilhaInt(&pilhaRotulos));
+               geraCodigo(mepa_comand, "NADA");
+            } 
+         
+         comando_sem_rotulo
+            {
+            sprintf(mepa_comand, "R%02d", topoPilhaInt(&pilhaRotulos));
+            geraCodigo(mepa_comand, "NADA");
+         }
+
+         | %prec LOWER_THAN_ELSE
+;
 
 // regra 23 ====================================================================
 // TODO: fazer

@@ -1,58 +1,41 @@
      INPP
-     AMEM 3
      AMEM 2
-     AMEM 1
-     AMEM 3
      DSVS R00
 R00: NADA 
+     LEIT
+     ARMZ 0, 1
      CRCT 0
      ARMZ 0, 0
-     CRCT 10
-     ARMZ 0, 4
-     LEIT
-     ARMZ 0, 0
-     CRCT 10
-     CRCT 1
-     SOMA
-     IMPR
-     CRVL 0, 0
-     IMPR
-     CRVL 0, 4
-     IMPR
-     CRVL 0, 0
-     CRVL 0, 1
-     CMMA
-     CRVL 0, 1
-     CRVL 0, 2
-     CMIG
-     CONJ
-     ARMZ 0, 5
-     LEIT
-     ARMZ 0, 6
-     LEIT
-     ARMZ 0, 7
-     CRCT 0
-     ARMZ 0, 8
 R01: NADA 
-     CRVL 0, 6
-     CRVL 0, 7
-     CMEG
+     CRVL 0, 0
+     CRVL 0, 1
+     CMME
      DSVF R02
-     CRVL 0, 8
-     CRVL 0, 6
-     CRVL 0, 6
+R03: NADA 
+     CRVL 0, 0
+     CRVL 0, 1
+     CMME
+     DSVF R04
+     CRVL 0, 0
+     CRCT 2
+     DIVI
+     CRCT 2
      MULT
-     SOMA
-     ARMZ 0, 8
-     CRVL 0, 6
+     CRVL 0, 0
+     CMIG
+     DSVF R05
+     CRVL 0, 0
      IMPR
-     CRVL 0, 8
+     CRCT 0
      IMPR
-     CRVL 0, 6
+     DSVS R06
+     CRVL 0, 0
      CRCT 1
      SOMA
-     ARMZ 0, 6
+     ARMZ 0, 0
+     DSVS R03
+R04: NADA 
      DSVS R01
 R02: NADA 
-     DMEM 9
+     DMEM 2
      PARA
