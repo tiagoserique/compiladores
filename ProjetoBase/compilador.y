@@ -265,8 +265,13 @@ declara_procedimento:
 
    PONTO_E_VIRGULA bloco
    {
-      sprintf(mepa_comand, "RTPR %d, %d", nivel_lexico, num_params);
+      removeNTabelaSimbolos(&ts, topoPilhaInt(&pilhaAmem));
+      sprintf(mepa_comand, "RTPR %d, %d", nivel_lexico, topoPilhaInt(&pilhaAmem));
       geraCodigo(NULL, mepa_comand);
+
+      popPilhaInt(&pilhaAmem);
+      removeNTabelaSimbolos(&ts, topoPilhaInt(&pilhaProcs));
+      popPilhaInt(&pilhaProcs);
    }
 
    PONTO_E_VIRGULA
