@@ -355,6 +355,10 @@ comandos:
 
 // regra 17 ====================================================================
 comando: comando_sem_rotulo
+   // {
+   //    sprintf(mepa_comand, "ENRT %d, %d", nivel_lexico, num_param_chamada_atual);
+   //    geraCodigo(NULL, mepa_comand);
+   // }
 ;
 
 // regra 18 ====================================================================
@@ -529,7 +533,13 @@ procedimento_sem_parametros:
 
 // regra 21 ====================================================================
 // // TODO: fazer
-// goto: 
+// comando_goto:
+//    {
+
+//       sprintf(mepa_comand, "DSVS R%02d", conteudo.proc.rotulo,  nivel_lexico_proc??? , nivel_lexico);
+//       geraCodigo(NULL, ,mepa_comand);
+//    }
+   
 // ;
 
 // regra 22 ====================================================================
