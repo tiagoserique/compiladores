@@ -17,7 +17,7 @@
 
 TabelaSimbolos *ts, *pilhaAtribuicao;
 tipoConteudo conteudo;
-Simbolo s;
+Simbolo s, *s_var_ou_proc;
 PilhaInt pilhaRotulos, pilhaAmem, pilhaProcs;
 PilhaSimbolos pilhaVarAEsquerda;
 
@@ -402,27 +402,29 @@ item_escrita:
 atribuicao_ou_procedimento: 
    IDENT
    {
-      Simbolo *s = buscaTabelaSimbolos(&ts, token);
+      Simbolo *s_var_ou_proc = buscaTabelaSimbolos(&ts, token);
 
-      if ( s == NULL ){
+      if ( s_var_ou_proc == NULL ){
          fprintf(stderr, "COMPILATION ERROR!!! variavel nao declarada %s\n", token);
          imprimeTabelaSimbolos(&ts);
          exit(1);
       }
 
-      pushPilhaSimbolos(&pilhaVarAEsquerda, s);
+      pushPilhaSimbolos(&pilhaVarAEsquerda, s_var_ou_proc);
    } 
    atribuicao_continua 
+   {
+      popPilhaSimbolos(&pilhaVarEsquerda, s_var_ou_proc);
+   }
 ;
 
 atribuicao_continua: 
    ATRIBUICAO expressao
       {
 
-         Simbolo *s = topoPilhaSimbolos(&pilhaVarAEsquerda);
+         Simbolo *s_var_ou_proc = topoPilhaSimbolos(&pilhaVarAEsquerda);
 
-         if ( s->categoria == CAT_VARIAVEL 
-            && s->conteudo.var.tipo != $2 ){
+         if ( s_var_ou_proc->conteudo.var.tipo != $2 ){
             fprintf(stderr, "COMPILATION ERROR!!! Atribuicao de tipos divergentes\n");
             // fprintf(stderr, "Ident: %s\n", s->identificador);
             // fprintf(stderr, "Tipo da variavel: %d\n", s->conteudo.var.tipo);
@@ -431,10 +433,34 @@ atribuicao_continua:
             exit(1);
          }
 
-         sprintf(mepa_comand, "ARMZ %d, %d", s->nivel, s->conteudo.var.deslocamento);
-         geraCodigo(NULL, mepa_comand);
+        switch (s_var_ou_proc->categoria){
+            case CAT_VARIAVEL:
+                sprintf(mepa_comand, "ARMZ %d, %d", s_var_ou_proc->nivel, s_var_ou_proc->conteudo.var.deslocamento);
+            break;
+            
+            case CAT_PARAMETRO:
+                if (s_var_ou_proc->conteudo.param.passagem == PAS_COPIA){
+                    sprintf(mepa_comand, "ARMZ %d, %d", s_var_ou_proc->nivel, s_var_ou_proc->conteudo.var.deslocamento);
+                }
+                else if (s_var_ou_proc->conteudo.param.passagem == PAS_REFERENCIA){
+                    sprintf(mepa_comand, "ARMI %d, %d", s_var_ou_proc->nivel, s_var_ou_proc->conteudo.var.deslocamento);
+                }
+                else {
+                    fprintf(stderr, "COMPILATION ERROR!!! tipo de passagem de parametror nao especificada\n");
+                    exit(1);
+                }
+            break;
 
-         popPilhaSimbolos(&pilhaVarAEsquerda);
+            // case CAT_FUNCAO:
+            // break;
+
+            default:
+                fprintf(stderr, "COMPILATION ERROR!!! procedimento tratado como variavel\n");
+                exit(1);
+            break;
+        }
+
+         geraCodigo(NULL, mepa_comand);
       }
    | chamada_de_procedimento
    | procedimento_sem_parametros
@@ -442,29 +468,57 @@ atribuicao_continua:
 
 // regra 20 ====================================================================
 chamada_de_procedimento: 
-   ABRE_PARENTESES lista_expressoes FECHA_PARENTESES
-;
-
-procedimento_sem_parametros: 
+    
    {
-      Simbolo *s = topoPilhaSimbolos(&pilhaVarAEsquerda);
+      Simbolo *s_var_ou_proc = topoPilhaSimbolos(&pilhaVarAEsquerda);
 
-      if ( s == NULL ){
+      if ( s_var_ou_proc == NULL ){
          fprintf(stderr, "COMPILATION ERROR!!! variavel ou procedimento inexistente %s\n", token);
          imprimeTabelaSimbolos(&ts);
          exit(1);
       }
 
-      if ( s->categoria != CAT_PROCEDIMENTO ){
+      if ( s_var_ou_proc->categoria != CAT_PROCEDIMENTO ){
          fprintf(stderr, "COMPILATION ERROR!!! %s nao eh um procedimento\n", token);
          imprimeTabelaSimbolos(&ts);
          exit(1);
       }
 
-      sprintf(mepa_comand, "CHPR %s", s->conteudo.proc.rotulo);
-      geraCodigo(NULL, mepa_comand);
+        memcpy(&procedimento_atual,s_var_ou_proc, sizeof(Simbolo));
 
-      popPilhaSimbolos(&pilhaVarAEsquerda);
+        if (procedimento_atual.categoria == CAT_FUNCAO){
+            geraCodigo(NULL, "AMEM 1");
+        }
+
+
+      sprintf(mepa_comand, "CHPR %s", s_var_ou_proc->conteudo.proc.rotulo);
+      geraCodigo(NULL, mepa_comand);
+   }
+
+   ABRE_PARENTESES lista_expressoes FECHA_PARENTESES
+;
+
+procedimento_sem_parametros: 
+   {
+      Simbolo *s_var_ou_proc = topoPilhaSimbolos(&pilhaVarAEsquerda);
+
+      if ( s_var_ou_proc == NULL ){
+         fprintf(stderr, "COMPILATION ERROR!!! variavel ou procedimento inexistente %s\n", token);
+         imprimeTabelaSimbolos(&ts);
+         exit(1);
+      }
+
+      if ( s_var_ou_proc->categoria != CAT_PROCEDIMENTO ){
+         fprintf(stderr, "COMPILATION ERROR!!! %s nao eh um procedimento\n", token);
+         imprimeTabelaSimbolos(&ts);
+         exit(1);
+      }
+
+        memcpy(&procedimento_atual,s_var_ou_proc, sizeof(Simbolo));
+
+
+      sprintf(mepa_comand, "CHPR %s", s_var_ou_proc->conteudo.proc.rotulo);
+      geraCodigo(NULL, mepa_comand);
    }
 ;
 
@@ -696,13 +750,31 @@ fator:
 
             if (s->categoria == CAT_VARIAVEL){
                sprintf(mepa_comand, "CRVL %d, %d", s->nivel, s->conteudo.var.deslocamento);
-               geraCodigo(NULL, mepa_comand);
 
             }
             else if (s->categoria == CAT_PROCEDIMENTO) {
                printf("aaaaaaaaaa\n");
             }
+            else if (s->categoria == CAT_PARAMETRO){
+                if (s->conteudo.param.passagem == PAS_COPIA){
+                    sprintf(mepa_comand, "CRVL %d, %d", s->nivel, s->conteudo.param.deslocamento);
+                }
+                else if (s->conteudo.param.passagem == PAS_REFERENCIA){
+                    if (){
+                        sprintf(mepa_comand, "CRVL %d, %d", s->nivel, s->conteudo.param.deslocamento);
+                    }
+                    else {
+                        sprintf(mepa_comand, "CRVI %d, %d", s->nivel, s->conteudo.param.deslocamento);
+                    }
+                }
+                else {
+                    fprintf(stderr, "COMPILATION ERROR!!! passagem de parametro nao identificada\n");
+                    exit(1);
+                }
+            }
             
+            geraCodigo(NULL, mepa_comand);
+
             popPilhaSimbolos(&pilhaVarAEsquerda);
          }
       | NUMERO 
