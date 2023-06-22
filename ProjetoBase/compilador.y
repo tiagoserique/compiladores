@@ -23,11 +23,19 @@ PilhaSimbolos pilhaVarAEsquerda;
 
 int num_vars;
 int num_params;
+int num_params_section;
+int num_procedimentos_proc_atual;
 int nivel_lexico;
-int rotulo_atual = 0;
+int rotulo_atual;
 int quantidade_tipo_atual;
+int referencia; // pra passagem por referencia ou nao
 
 char mepa_comand[128];
+char proc_nome[128];
+
+parametro lista_parametros[128];
+Simbolo lista_simbolos[128];
+char idents[128][128];
 
 int str2type(const char *str){
    if (!strcmp(str, "integer")) return TIPO_INTEGER;
@@ -69,7 +77,6 @@ int str2type(const char *str){
 %type <int_val> expressao_simples
 %type <int_val> fator
 %type <int_val> tipo 
-%type <int_val> atribuicao
 %type <int_val> termo
 
 %nonassoc LOWER_THAN_ELSE
@@ -79,131 +86,194 @@ int str2type(const char *str){
 
 // regra 01 ====================================================================
 programa:
-         {
-            geraCodigo (NULL, "INPP");
-            nivel_lexico = 0;
-            rotulo_atual = 0;
-         }
-         
-         PROGRAM IDENT
-         ABRE_PARENTESES lista_idents FECHA_PARENTESES PONTO_E_VIRGULA
-         bloco PONTO 
+   {
+      geraCodigo (NULL, "INPP");
+      nivel_lexico = 0;
+      rotulo_atual = 0;
+   }
+   
+   PROGRAM IDENT
+   ABRE_PARENTESES lista_idents FECHA_PARENTESES PONTO_E_VIRGULA
+   bloco PONTO 
 
-         {
-            geraCodigo (NULL, "PARA");
-         }
+   {
+      geraCodigo (NULL, "PARA");
+   }
 ;
 
 // regra 02 ====================================================================
 bloco:
-      parte_declara_vars
-         {
-            pushPilhaInt(&pilhaRotulos, rotulo_atual);
+   parte_declara_vars
+      {
+         pushPilhaInt(&pilhaRotulos, rotulo_atual);
 
-            sprintf(mepa_comand, "DSVS R%02d", rotulo_atual);
-            geraCodigo(NULL, mepa_comand);
+         sprintf(mepa_comand, "DSVS R%02d", rotulo_atual);
+         geraCodigo(NULL, mepa_comand);
+         rotulo_atual++;
 
-            rotulo_atual++;
-         }
+         nivel_lexico++;
+         num_procedimentos_proc_atual = 0;
+      }
 
-      // parte_declara_subrotinas
-         {
-            sprintf(mepa_comand, "R%02d", topoPilhaInt(&pilhaRotulos));
-            geraCodigo(mepa_comand, "NADA");
+   parte_declara_subrotinas
+      {
+         pushPilhaInt(&pilhaProcs, num_procedimentos_proc_atual);
 
-            popPilhaInt(&pilhaRotulos);
-         }
+         nivel_lexico--;
 
-      comando_composto
-         {
-            imprimeTabelaSimbolos(&ts);
-            imprimePilhaInt(&pilhaRotulos);
-            sprintf(mepa_comand, "DMEM %d", topoPilhaInt(&pilhaAmem));
-            removeNTabelaSimbolos(&ts, topoPilhaInt(&pilhaAmem));
-            geraCodigo(NULL, mepa_comand);
-            popPilhaInt(&pilhaAmem);
-         }
+         sprintf(mepa_comand, "R%02d", topoPilhaInt(&pilhaRotulos));
+         geraCodigo(mepa_comand, "NADA");
+
+         popPilhaInt(&pilhaRotulos);
+      }
+
+   comando_composto
+      {
+         imprimeTabelaSimbolos(&ts);
+         imprimePilhaInt(&pilhaRotulos);
+         sprintf(mepa_comand, "DMEM %d", topoPilhaInt(&pilhaAmem));
+         removeNTabelaSimbolos(&ts, topoPilhaInt(&pilhaAmem));
+         geraCodigo(NULL, mepa_comand);
+         popPilhaInt(&pilhaAmem);
+      }
 ;
 
 // regra 08 ====================================================================
 parte_declara_vars:
-                  { num_vars = 0; } 
-                  
-                  VAR declara_vars
-                  
-                  {
-                     pushPilhaInt(&pilhaAmem, num_vars);
-                  }
+   { 
+      num_vars = 0; 
+   } 
+   
+   VAR declara_vars
+   
+   {
+      pushPilhaInt(&pilhaAmem, num_vars);
+   }
 
-                  |  { pushPilhaInt(&pilhaAmem, 0); }
+   |  { pushPilhaInt(&pilhaAmem, 0); }
 ;
 
 // regra 09 ====================================================================
 declara_vars: 
-            declara_vars declara_var
-            | declara_var
+   declara_vars declara_var
+   | declara_var
 ;
 
 declara_var:
-            { quantidade_tipo_atual = 0; }
-            
-            lista_id_var DOIS_PONTOS tipo
-            
-            { 
-               if ( $4 == TIPO_UNDEFINED_TYPE ){
-                  fprintf(stderr, "COMPILATION ERROR!!! Tipo indefinido\n");
-                  exit(1);
-               }
+   { quantidade_tipo_atual = 0; }
+   
+   lista_id_var DOIS_PONTOS tipo
+   
+   { 
+      if ( $4 == TIPO_UNDEFINED_TYPE ){
+         fprintf(stderr, "COMPILATION ERROR!!! Tipo indefinido\n");
+         exit(1);
+      }
 
-               sprintf(mepa_comand, "AMEM %d", quantidade_tipo_atual); 
-               geraCodigo(NULL, mepa_comand);
+      sprintf(mepa_comand, "AMEM %d", quantidade_tipo_atual); 
+      geraCodigo(NULL, mepa_comand);
 
-               atribuiTipoTabelaSimbolos(&ts, CAT_VARIAVEL, $4, quantidade_tipo_atual); 
-            }
+      atribuiTipoTabelaSimbolos(&ts, CAT_VARIAVEL, $4, quantidade_tipo_atual); 
+   }
 
-            PONTO_E_VIRGULA
+   PONTO_E_VIRGULA
 ;
 
-// tipo: IDENT 
-tipo: TIPO { $$ = str2type(token); }
+tipo: 
+   TIPO { $$ = str2type(token); }
 ;
 
 // regra 10 ====================================================================
 lista_id_var:
-            lista_id_var VIRGULA IDENT
-            { 
-               conteudo.var.deslocamento = num_vars;
-               s = criaSimbolo(token, CAT_VARIAVEL, nivel_lexico, conteudo);
-               pushTabelaSimbolos(&ts, s);
-               num_vars++; quantidade_tipo_atual++;
-            }
-            
-            | IDENT 
-            {
-               conteudo.var.deslocamento = num_vars;
-               s = criaSimbolo(token, CAT_VARIAVEL, nivel_lexico, conteudo);
-               pushTabelaSimbolos(&ts, s);
-               num_vars++; quantidade_tipo_atual++;      
-            }
+   lista_id_var VIRGULA IDENT
+   { 
+      conteudo.var.deslocamento = num_vars;
+      s = criaSimbolo(token, CAT_VARIAVEL, nivel_lexico, conteudo);
+      pushTabelaSimbolos(&ts, s);
+      num_vars++; quantidade_tipo_atual++;
+   }
+   
+   | IDENT 
+   {
+      conteudo.var.deslocamento = num_vars;
+      s = criaSimbolo(token, CAT_VARIAVEL, nivel_lexico, conteudo);
+      pushTabelaSimbolos(&ts, s);
+      num_vars++; quantidade_tipo_atual++;      
+   }
 ;
 
 lista_idents: 
-            lista_idents VIRGULA IDENT
-            | IDENT
+   lista_idents VIRGULA ident_params
+   | ident_params
 ;
 
-// // TODO: fazer
-// parte_declara_subrotinas: declara_procedimento PONTO_E_VIRGULA
-//             | declara_funcao PONTO_E_VIRGULA
-// ;
+ident_params: 
+   IDENT
+   {
+      strcpy(idents[num_params], token);
+      lista_parametros[num_params].passagem = referencia? PAS_REFERENCIA : PAS_COPIA;
+      num_params++;
+      num_params_section++;
+   }
+;
 
-// // TODO: fazer
-// declara_procedimento: PROCEDURE IDENT 
-//    ABRE_PARENTESES parte_param_formais FECHA_PARENTESES 
-//    PONTO_E_VIRGULA
-//    bloco
-// ;
+// regra 11 ====================================================================
+// TODO: fazer
+parte_declara_subrotinas: 
+   parte_declara_subrotinas 
+   declara_procedimento { num_procedimentos_proc_atual++; }
+   // | declara_funcao
+   |
+;
 
+// regra 12 ====================================================================
+declara_procedimento: 
+   PROCEDURE IDENT 
+   {
+      strcpy(proc_nome, token);
+
+      num_params = 0;
+   }
+
+   param_formais_ou_nada
+   {
+      conteudo.proc.rotulo = malloc(4);
+      sprintf(conteudo.proc.rotulo, "R%02d", rotulo_atual);
+
+      conteudo.proc.tipo_retorno = TIPO_UNDEFINED_TYPE;
+      conteudo.proc.qtdParametros = num_params;
+
+      // copia lista de paramtros para a tabela de simbolos 
+      memcpy(conteudo.proc.lista, lista_parametros, sizeof(parametro) * num_params);
+
+      Simbolo s = criaSimbolo(proc_nome, CAT_PROCEDIMENTO, nivel_lexico, conteudo);
+      pushTabelaSimbolos(&ts, s);
+      
+      sprintf(mepa_comand, "ENPR %d", nivel_lexico);
+      geraCodigo(conteudo.proc.rotulo, mepa_comand);
+
+      // coloca params com deslocamento correto na tabela de simbolos
+      for (int i = num_params-1; i >= 0; --i){
+         lista_simbolos[i].conteudo.param.deslocamento = -4 + (i - (num_params - 1));
+         pushTabelaSimbolos(&ts, lista_simbolos[i]);
+      }
+
+      rotulo_atual++;
+      
+      pushPilhaInt(&pilhaAmem, num_params);
+   }
+
+   PONTO_E_VIRGULA bloco
+   {
+      sprintf(mepa_comand, "RTPR %d, %d", nivel_lexico, num_params);
+      geraCodigo(NULL, mepa_comand);
+   }
+
+   PONTO_E_VIRGULA
+;
+
+
+// regra 13 ====================================================================
 // // TODO: fazer
 // declara_funcao: FUNCTION IDENT 
 //    ABRE_PARENTESES parte_param_formais FECHA_PARENTESES DOIS_PONTOS IDENT
@@ -211,15 +281,48 @@ lista_idents:
 //    bloco
 // ;
 
-// // TODO: fazer
-// parte_param_formais: secao_param_formais PONTO_E_VIRGULA secao_param_formais
-// ;
+// regra 14 ====================================================================
+param_formais_ou_nada: 
+   parte_param_formais 
+   |
+;
 
-// // TODO: fazer
-// secao_param_formais: var lista_id_var DOIS_PONTOS IDENT
-//    | FUNCTION lista_id_var DOIS_PONTOS IDENT
-//    | PROCEDURE lista_id_var
-// ;
+parte_param_formais: 
+   ABRE_PARENTESES parametros FECHA_PARENTESES
+;
+
+parametros: 
+   secao_param_formais PONTO_E_VIRGULA secao_param_formais
+   | secao_param_formais
+;
+
+// regra 15 ====================================================================
+var_ou_nada: 
+   VAR 
+      {
+         referencia = 1;
+      }
+   |  
+      { 
+         referencia = 0;
+      }
+;
+
+secao_param_formais: 
+   var_ou_nada {num_params_section = 0; } lista_idents DOIS_PONTOS tipo
+
+   {
+      for (int i = num_params - num_params_section; i < num_params; i++){
+         tipoConteudo conteudo;
+         conteudo.param.tipo = $5;
+
+         lista_parametros[i].tipo = $5;
+         lista_simbolos[i] = criaSimbolo(idents[i], CAT_PARAMETRO, nivel_lexico, conteudo);
+      }
+
+      // atribuiTipoTabelaSimbolos(&ts, CAT_PARAMETRO, $4, num_params_section);
+   }
+;
 
 // regra 16 ====================================================================
 comando_composto: T_BEGIN comandos T_END
@@ -228,15 +331,15 @@ comando_composto: T_BEGIN comandos T_END
 ;
 
 comandos: 
-         comandos 
-            { 
-               if ( strcmp(token,";") ){ 
-                  fprintf(stderr, "COMPILATION ERROR!!! Falta de ; apos comando\n");
-                  exit(1);
-               }
-            } 
-         PONTO_E_VIRGULA  comando 
-         | comando 
+   comandos 
+      { 
+         if ( strcmp(token,";") ){ 
+            fprintf(stderr, "COMPILATION ERROR!!! Falta de ; apos comando\n");
+            exit(1);
+         }
+      } 
+   PONTO_E_VIRGULA comando 
+   | comando 
 ;
 
 // regra 17 ====================================================================
@@ -245,88 +348,129 @@ comando: comando_sem_rotulo
 
 // regra 18 ====================================================================
 comando_sem_rotulo: 
-                  atribuicao
-                  | comando_composto
-                  | leitura
-                  | escrita
-                  // | chamada_de_procedimento
-                  | comando_condicional
-                  | comando_repetitivo
-                  |
+   atribuicao_ou_procedimento
+   | comando_composto
+   | leitura
+   | escrita
+   | comando_condicional
+   | comando_repetitivo
+   |
 ;
 
 leitura: READ ABRE_PARENTESES leitura_itens FECHA_PARENTESES
 
 leitura_itens: 
-               leitura_itens VIRGULA item_leitura
-               | item_leitura
+   leitura_itens VIRGULA item_leitura
+   | item_leitura
 
 item_leitura: 
-            IDENT 
-            {
-               geraCodigo(NULL, "LEIT");
-               Simbolo *s = buscaTabelaSimbolos(&ts, token);
-               if ( s == NULL || s->categoria == CAT_PROCEDIMENTO ){
-                  fprintf(stderr, "COMPILATION ERROR!!! variavel nao declarada\n");
-                  exit(1);
-               }
+   IDENT 
+   {
+      geraCodigo(NULL, "LEIT");
+      Simbolo *s = buscaTabelaSimbolos(&ts, token);
+      if ( s == NULL || s->categoria == CAT_PROCEDIMENTO ){
+         fprintf(stderr, "COMPILATION ERROR!!! variavel nao declarada\n");
+         exit(1);
+      }
 
-               sprintf(mepa_comand, "ARMZ %d, %d", s->nivel, s->conteudo.var.deslocamento);
-               geraCodigo(NULL, mepa_comand);
-            }
+      sprintf(mepa_comand, "ARMZ %d, %d", s->nivel, s->conteudo.var.deslocamento);
+      geraCodigo(NULL, mepa_comand);
+   }
 ;
 
 escrita: WRITE ABRE_PARENTESES escrita_itens FECHA_PARENTESES
 ;
 
 escrita_itens: 
-               escrita_itens VIRGULA item_escrita
-               | item_escrita
+   escrita_itens VIRGULA item_escrita
+   | item_escrita
 ;
 
 item_escrita:  
-            expressao
-            {
-               geraCodigo(NULL, "IMPR");
-            }
+   expressao
+   {
+      geraCodigo(NULL, "IMPR");
+   }
 ;
 
 // regra 19 ====================================================================
-atribuicao: 
-         variavel ATRIBUICAO expressao
-         {
+atribuicao_ou_procedimento: 
+   IDENT
+   {
+      Simbolo *s = buscaTabelaSimbolos(&ts, token);
 
-            Simbolo *s = topoPilhaSimbolos(&pilhaVarAEsquerda);
+      if ( s == NULL ){
+         fprintf(stderr, "COMPILATION ERROR!!! variavel nao declarada %s\n", token);
+         imprimeTabelaSimbolos(&ts);
+         exit(1);
+      }
 
-            if ( s->categoria == CAT_VARIAVEL 
-               && s->conteudo.var.tipo != $3 ){
-               fprintf(stderr, "COMPILATION ERROR!!! Atribuicao de tipos divergentes\n");
-               // fprintf(stderr, "Ident: %s\n", s->identificador);
-               // fprintf(stderr, "Tipo da variavel: %d\n", s->conteudo.var.tipo);
-               // fprintf(stderr, "Tipo da expressao: %d\n", $3);
-               // imprimeTabelaSimbolos(&ts);
-               exit(1);
-            }
-   
-            sprintf(mepa_comand, "ARMZ %d, %d", s->nivel, s->conteudo.var.deslocamento);
-            geraCodigo(NULL, mepa_comand);
+      pushPilhaSimbolos(&pilhaVarAEsquerda, s);
+   } 
+   atribuicao_continua 
+;
 
-            popPilhaSimbolos(&pilhaVarAEsquerda);
+atribuicao_continua: 
+   ATRIBUICAO expressao
+      {
+
+         Simbolo *s = topoPilhaSimbolos(&pilhaVarAEsquerda);
+
+         if ( s->categoria == CAT_VARIAVEL 
+            && s->conteudo.var.tipo != $2 ){
+            fprintf(stderr, "COMPILATION ERROR!!! Atribuicao de tipos divergentes\n");
+            // fprintf(stderr, "Ident: %s\n", s->identificador);
+            // fprintf(stderr, "Tipo da variavel: %d\n", s->conteudo.var.tipo);
+            // fprintf(stderr, "Tipo da expressao: %d\n", $3);
+            // imprimeTabelaSimbolos(&ts);
+            exit(1);
          }
+
+         sprintf(mepa_comand, "ARMZ %d, %d", s->nivel, s->conteudo.var.deslocamento);
+         geraCodigo(NULL, mepa_comand);
+
+         popPilhaSimbolos(&pilhaVarAEsquerda);
+      }
+   | chamada_de_procedimento
+   | procedimento_sem_parametros
 ;
 
 // regra 20 ====================================================================
-// // TODO: fazer
-// chamada_de_procedimento: IDENT lista_expressoes
-// ;
+chamada_de_procedimento: 
+   ABRE_PARENTESES lista_expressoes FECHA_PARENTESES
+;
+
+procedimento_sem_parametros: 
+   {
+      Simbolo *s = topoPilhaSimbolos(&pilhaVarAEsquerda);
+
+      if ( s == NULL ){
+         fprintf(stderr, "COMPILATION ERROR!!! variavel ou procedimento inexistente %s\n", token);
+         imprimeTabelaSimbolos(&ts);
+         exit(1);
+      }
+
+      if ( s->categoria != CAT_PROCEDIMENTO ){
+         fprintf(stderr, "COMPILATION ERROR!!! %s nao eh um procedimento\n", token);
+         imprimeTabelaSimbolos(&ts);
+         exit(1);
+      }
+
+      sprintf(mepa_comand, "CHPR %s", s->conteudo.proc.rotulo);
+      geraCodigo(NULL, mepa_comand);
+
+      popPilhaSimbolos(&pilhaVarAEsquerda);
+   }
+;
+
+                         
 
 // regra 21 ====================================================================
 // // TODO: fazer
-// comando_composto: 
+// goto: 
 // ;
 
 // regra 22 ====================================================================
-// TODO: fazer
 comando_condicional: if_then cond_else 
                      {
                         popPilhaInt(&pilhaRotulos);
@@ -360,7 +504,7 @@ cond_else:
          
          comando_sem_rotulo
             {
-            sprintf(mepa_comand, "R%02d", topoPilhaInt(&pilhaRotulos));
+            sprintf(mepa_comand, "R%02d", topoPilhaInt(&pilhaRotulos) + 1);
             geraCodigo(mepa_comand, "NADA");
          }
 
@@ -368,7 +512,6 @@ cond_else:
 ;
 
 // regra 23 ====================================================================
-// TODO: fazer
 comando_repetitivo: 
                   WHILE 
                      {
@@ -400,9 +543,10 @@ comando_repetitivo:
 ;
 
 // regra 24 ====================================================================
-// // TODO: fazer
-// lista_expressoes: expressao VIRGULA expressao
-// ;
+lista_expressoes: 
+               expressao VIRGULA lista_expressoes 
+               | expressao
+;
 
 // regra 25 ====================================================================
 expressao: 
@@ -518,14 +662,42 @@ vezes_div_and:
 ;
 
 // regra 29 ====================================================================
+
+procedimento_ou_nada :
+                     // procedimento
+                     // {
+
+                     // }
+                     // | {}
+
+;
+
+
 fator: 
-      variavel
+      IDENT
+         {
+            Simbolo *s = buscaTabelaSimbolos(&ts, token);
+
+            if ( s == NULL ){
+               fprintf(stderr, "COMPILATION ERROR!!! variavel nao declarada\n");
+               exit(1);
+            }
+
+            pushPilhaSimbolos(&pilhaVarAEsquerda, s);
+         }
+      procedimento_ou_nada
          {
             Simbolo *s = topoPilhaSimbolos(&pilhaVarAEsquerda);
 
-            sprintf(mepa_comand, "CRVL %d, %d", s->nivel, s->conteudo.var.deslocamento);
-            geraCodigo(NULL, mepa_comand);
+            if (s->categoria == CAT_VARIAVEL){
+               sprintf(mepa_comand, "CRVL %d, %d", s->nivel, s->conteudo.var.deslocamento);
+               geraCodigo(NULL, mepa_comand);
 
+            }
+            else if (s->categoria == CAT_PROCEDIMENTO) {
+               printf("aaaaaaaaaa\n");
+            }
+            
             popPilhaSimbolos(&pilhaVarAEsquerda);
          }
       | NUMERO 
@@ -556,18 +728,19 @@ fator:
 ;
 
 // regra 30 ====================================================================
-variavel: 
-         IDENT
-         {
-            Simbolo *s = buscaTabelaSimbolos(&ts, token);
+// variavel: 
+//          IDENT
+//          {
+//             Simbolo *s = buscaTabelaSimbolos(&ts, token);
 
-            if ( s == NULL ){
-               fprintf(stderr, "COMPILATION ERROR!!! variavel nao declarada\n");
-               exit(1);
-            }
+//             if ( s == NULL ){
+//                fprintf(stderr, "COMPILATION ERROR!!! variavel nao declarada %s\n", token);
+//                imprimeTabelaSimbolos(&ts);
+//                exit(1);
+//             }
 
-            pushPilhaSimbolos(&pilhaVarAEsquerda, s);
-         }
+//             pushPilhaSimbolos(&pilhaVarAEsquerda, s);
+//          }
 ;
 
 

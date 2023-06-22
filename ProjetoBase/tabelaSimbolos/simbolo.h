@@ -2,12 +2,12 @@
 #define SIMBOLO_H
 
 
-typedef enum enumTipoSimbolo {
+typedef enum enumCategoriaSimbolo {
     CAT_VARIAVEL,
     CAT_PARAMETRO,
     CAT_PROCEDIMENTO,
     CAT_FUNCAO
-} enumTipoSimbolo;
+} enumCategoriaSimbolo;
 
 typedef enum tipoVariavel {
     TIPO_INTEGER,
@@ -36,6 +36,8 @@ typedef struct parametro {
 } parametro;
 
 typedef struct procedimento {
+    int tipo_retorno;
+    int deslocamento;
     char *rotulo;
     int qtdParametros;
     parametro lista[128];
@@ -44,7 +46,7 @@ typedef struct procedimento {
 
 // define simbolo
 
-typedef struct tipoConteudo {
+typedef union tipoConteudo {
     variavel var;
     parametro param;
     procedimento proc;

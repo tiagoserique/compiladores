@@ -19,6 +19,21 @@ char *imprimeTipo(int tipo){
     }
 }
 
+char *imprimeCategoria(int categoria){
+    switch (categoria){
+        case CAT_VARIAVEL:
+            return "variavel";
+        case CAT_PARAMETRO:
+            return "parametro";
+        case CAT_PROCEDIMENTO:
+            return "procedure";
+        case CAT_FUNCAO:
+            return "function";
+        default:
+            return "undefined";
+    }
+}
+
 void inicializaTabelaSimbolos(TabelaSimbolos **ts){
     *ts = (TabelaSimbolos *) malloc(sizeof(TabelaSimbolos));
     (*ts)->simbolos = malloc(sizeof(Simbolo));
@@ -102,16 +117,45 @@ Simbolo *buscaTabelaSimbolos(TabelaSimbolos **ts, const char *nome){
 void imprimeTabelaSimbolos(TabelaSimbolos **ts){
     int i;
     printf("\nTabela de símbolos:\n");
+
     for (i = (*ts)->quantidade - 1; i >= 0 ; i--){
         Simbolo *atual = &( (*ts)->simbolos[i] );
-        fprintf(stderr, "Ident: %s \t|| Cat: %d || Nível: %d || Tipo: %s || Deslocamento: %d\n", 
-            atual->identificador, 
-            atual->categoria, 
-            atual->nivel,
-            imprimeTipo(atual->conteudo.var.tipo),
-            atual->conteudo.var.deslocamento);
+
+        if ( atual->categoria == CAT_PROCEDIMENTO || atual->categoria == CAT_FUNCAO ){
+            fprintf(stderr, "Ident: %s \t|| Cat: %s || Nível: %d || Tipo: %s || Rotulo: %s || QtdParam: %d\n", 
+                atual->identificador, 
+                imprimeCategoria(atual->categoria), 
+                atual->nivel,
+                imprimeTipo(atual->conteudo.proc.tipo_retorno),
+                atual->conteudo.proc.rotulo,
+                atual->conteudo.proc.qtdParametros);
+            continue;
+        }
+
+        if ( atual->categoria == CAT_PARAMETRO ){
+            fprintf(stderr, "Ident: %s \t|| Cat: %s || Nível: %d || Tipo: %s || Deslocamento: %d || Passagem: %s\n", 
+                atual->identificador, 
+                imprimeCategoria(atual->categoria), 
+                atual->nivel,
+                imprimeTipo(atual->conteudo.param.tipo),
+                atual->conteudo.param.deslocamento,
+                atual->conteudo.param.passagem == PAS_COPIA ? "copia" : "referencia");
+            continue;
+        }
+
+        if ( atual->categoria == CAT_VARIAVEL ){
+            fprintf(stderr, "Ident: %s \t|| Cat: %s || Nível: %d || Tipo: %s || Deslocamento: %d\n", 
+                atual->identificador, 
+                imprimeCategoria(atual->categoria), 
+                atual->nivel,
+                imprimeTipo(atual->conteudo.var.tipo),
+                atual->conteudo.var.deslocamento);
+            continue;
+        }
+
     }
     printf("\n");
+
 
     return;
 }
