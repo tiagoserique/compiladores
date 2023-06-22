@@ -408,7 +408,7 @@ item_escrita:
 atribuicao_ou_procedimento: 
    IDENT
    {
-      Simbolo *s_var_ou_proc = buscaTabelaSimbolos(&ts, token);
+      s_var_ou_proc = buscaTabelaSimbolos(&ts, token);
 
       if ( s_var_ou_proc == NULL ){
          fprintf(stderr, "COMPILATION ERROR!!! variavel nao declarada %s\n", token);
@@ -756,7 +756,6 @@ procedimento_ou_nada :
 fator: 
       IDENT
          {
-            imprimeTabelaSimbolos(&ts);
             s_ptr = buscaTabelaSimbolos(&ts, token);
 
             if ( s_ptr == NULL ){
