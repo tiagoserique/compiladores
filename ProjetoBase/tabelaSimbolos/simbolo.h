@@ -36,9 +36,9 @@ typedef struct parametro {
 } parametro;
 
 typedef struct procedimento {
-    int tipo_retorno;
+    int tipoRetorno;
     int deslocamento;
-    char *rotulo;
+    int rotulo;
     int qtdParametros;
     parametro lista[128];
 } procedimento;
@@ -46,7 +46,7 @@ typedef struct procedimento {
 
 // define simbolo
 
-typedef union tipoConteudo {
+typedef struct tipoConteudo {
     variavel var;
     parametro param;
     procedimento proc;
@@ -59,6 +59,13 @@ typedef struct Simbolo {
     tipoConteudo conteudo;
 } Simbolo;
 
+
+char *imprimeTipo(int tipo);
+
+char *imprimeCategoria(int categoria);
+
 Simbolo criaSimbolo(char *id, int cat, int nivel, tipoConteudo Conteudo);
+
+void imprimeSimbolo(Simbolo *s);
 
 #endif

@@ -3,37 +3,6 @@
 #include "tabelaSimbolos.h"
 #include <string.h> 
 
-
-char *imprimeTipo(int tipo){
-    switch (tipo){
-        case TIPO_INTEGER:
-            return "integer";
-        case TIPO_FLOAT:
-            return "float";
-        case TIPO_BOOLEAN:
-            return "boolean";
-        case TIPO_UNDEFINED_TYPE:
-            return "undefined";
-        default:
-            return "undefined";
-    }
-}
-
-char *imprimeCategoria(int categoria){
-    switch (categoria){
-        case CAT_VARIAVEL:
-            return "variavel";
-        case CAT_PARAMETRO:
-            return "parametro";
-        case CAT_PROCEDIMENTO:
-            return "procedure";
-        case CAT_FUNCAO:
-            return "function";
-        default:
-            return "undefined";
-    }
-}
-
 void inicializaTabelaSimbolos(TabelaSimbolos **ts){
     *ts = (TabelaSimbolos *) malloc(sizeof(TabelaSimbolos));
     (*ts)->simbolos = malloc(sizeof(Simbolo));
@@ -108,7 +77,7 @@ Simbolo *buscaTabelaSimbolos(TabelaSimbolos **ts, const char *nome){
 
     while ( i >= 0 ){
         Simbolo *atual = &( (*ts)->simbolos[i--] );
-        if ( !strcmp( atual->identificador, nome) ) return atual;
+        if ( !strcmp(atual->identificador, nome) ) return atual;
     }
 
     return NULL;
@@ -122,18 +91,18 @@ void imprimeTabelaSimbolos(TabelaSimbolos **ts){
         Simbolo *atual = &( (*ts)->simbolos[i] );
 
         if ( atual->categoria == CAT_PROCEDIMENTO || atual->categoria == CAT_FUNCAO ){
-            fprintf(stderr, "Ident: %s \t|| Cat: %s || Nível: %d || Tipo: %s || Rotulo: %s || QtdParam: %d\n", 
+            fprintf(stderr, "Ident: %s \t|| Cat: %s \t|| Nível: %d \t|| Tipo R: %s \t|| Rotulo: R%02d \t\t|| QtdParam: %d\n", 
                 atual->identificador, 
                 imprimeCategoria(atual->categoria), 
                 atual->nivel,
-                imprimeTipo(atual->conteudo.proc.tipo_retorno),
+                imprimeTipo(atual->conteudo.proc.tipoRetorno),
                 atual->conteudo.proc.rotulo,
                 atual->conteudo.proc.qtdParametros);
             continue;
         }
 
         if ( atual->categoria == CAT_PARAMETRO ){
-            fprintf(stderr, "Ident: %s \t|| Cat: %s || Nível: %d || Tipo: %s || Deslocamento: %d || Passagem: %s\n", 
+            fprintf(stderr, "Ident: %s \t|| Cat: %s \t|| Nível: %d \t|| Tipo: %s \t|| Deslocamento: %d \t|| Passagem: %s\n", 
                 atual->identificador, 
                 imprimeCategoria(atual->categoria), 
                 atual->nivel,
@@ -144,7 +113,7 @@ void imprimeTabelaSimbolos(TabelaSimbolos **ts){
         }
 
         if ( atual->categoria == CAT_VARIAVEL ){
-            fprintf(stderr, "Ident: %s \t|| Cat: %s || Nível: %d || Tipo: %s || Deslocamento: %d\n", 
+            fprintf(stderr, "Ident: %s \t|| Cat: %s \t|| Nível: %d \t|| Tipo: %s \t|| Deslocamento: %d\n", 
                 atual->identificador, 
                 imprimeCategoria(atual->categoria), 
                 atual->nivel,
