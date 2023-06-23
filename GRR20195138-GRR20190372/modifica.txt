@@ -1,0 +1,22 @@
+1) Descreva a idéia original para abordar a
+alteração; O que deu certo e o que teve de ser modificado
+no trajeto?
+
+Para atender a alteração foi necessário: 
+ - A criação de uma pilha para armanezar os labels declarados em diferentes procedimentos. 
+ - Contar quantos labels foram declarados por procedimento
+ - Tornar possível colocar um label antes de um comando sem rótulo
+ - Comandos sem rótulo podem ser também desvios (goto)
+ - Tornar possível declarar uma lista de labels
+ - Tornar possível adicionar os labels na tabela de símbolos criando uma categoria "label"
+ - 
+
+2) Quais foram os trechos do código que foram alterados?
+ - Regra "comandos"
+ - Regra "comando sem rótulo"
+ - Bloco de código após a regra "bloco" ser chamada dentro da regra "declara_procedimento" e "declara_funcao"
+
+
+3) Quais os maiores problemas para fazer funcionar
+ - Saber a hora correta de retirar os labels da tabela de símbolos
+ - Fadiga, sono e cansaço

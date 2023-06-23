@@ -1,0 +1,38 @@
+1) Relate as principais dificuldades ao longo do desenvolvimento
+
+Dentre as principais dificuldades para o desenvolvimento do compilador se destacaram:
+ - Entender o que era para fazer em cada um dos arquivos
+ - Começar a desenvolver o projeto em meio a todas as outras atividades relacionadas as outras matérias da faculdade
+ - Não saber o que é reduce-reduce e shift-reduce
+ - Implementar a verificação de operações com tipos inválidos
+
+ 2) Procure a descrição do comando record. Descreva (máximo 30 linhas) como incluí-lo no compilador.
+
+ Em Pascal, um "record" é uma estrutura de dados que pode conter campos com diferentes tipos de dados, como inteiros, strings, booleanos, entre outros. Esses campos são definidos dentro do "record" e podem ser acessados individualmente usando o nome do "record" seguido pelo nome do campo.
+
+Para implementar o Record no compilador, ele seria tratado como uma pilha e cada atributo do Record é acessado com um deslocamento. 
+
+Seria algo do tipo:
+
+TYPE IDENT IGUAL RECORD
+    lista_de_definicoes
+    END
+;
+lista_de_definicoes:
+    lista_de_definicoes PONTO_E_VIRGULA definicoes
+    | definicoes
+;
+definicoes:
+    lista_idents { associa a lista de idents ao record } DOIS_PONTOS 
+    
+    tipo
+    { atribui tipo aos identificadores da lista de identificadores }
+
+    PONTO_E_VIRGULA
+;
+lista_idents:
+    lista_idents VIRGULA ident
+    | ident
+;
+ident: IDENT { cria simbolo e associa a uma lista de idents };
+tipo: TIPO { retorna o tipo };
