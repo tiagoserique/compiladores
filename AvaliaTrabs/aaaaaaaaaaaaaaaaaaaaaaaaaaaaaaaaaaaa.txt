@@ -90,18 +90,18 @@ R02: NADA                                                          R02: NADA
      MULT                                                               MULT
      CRVL 0, 2                                                          CRVL 0, 2
      CMIG                                                               CMIG
-     DSVF R03                                                   |       DSVF R04
+     DSVF R04                                                           DSVF R04
      CRVL 0, 1                                                          CRVL 0, 1
      CRVL 1, 0                                                          CRVL 1, 0
      SOMA                                                               SOMA
      ARMZ 0, 1                                                          ARMZ 0, 1
-     DSVS R04                                                   |       DSVS R03
-R03: NADA                                                       |  R04: NADA 
+     DSVS R03                                                           DSVS R03
+R04: NADA                                                          R04: NADA 
      CRVL 0, 1                                                          CRVL 0, 1
      CRVL 1, 0                                                          CRVL 1, 0
      SUBT                                                               SUBT
      ARMZ 0, 1                                                          ARMZ 0, 1
-R04: NADA                                                       |  R03: NADA 
+R03: NADA                                                          R03: NADA 
      DMEM 1                                                             DMEM 1
      RTPR 1, 0                                                          RTPR 1, 0
 R00: NADA                                                          R00: NADA 
@@ -259,13 +259,13 @@ R02: NADA                                                          R02: NADA
      CRVL 1, -5                                                         CRVL 1, -5
      CRCT 2                                                             CRCT 2
      CMME                                                               CMME
-     DSVF R03                                                   |       DSVF R04
+     DSVF R04                                                           DSVF R04
      CRVL 1, -5                                                         CRVL 1, -5
      ARMZ 1, -6                                                         ARMZ 1, -6
      CRCT 0                                                             CRCT 0
      ARMI 1, -4                                                         ARMI 1, -4
-     DSVS R04                                                   |       DSVS R03
-R03: NADA                                                       |  R04: NADA 
+     DSVS R03                                                           DSVS R03
+R04: NADA                                                          R04: NADA 
      AMEM 1                                                             AMEM 1
      CRVL 1, -5                                                         CRVL 1, -5
      CRCT 1                                                             CRCT 1
@@ -286,7 +286,7 @@ R03: NADA                                                       |  R04: NADA
      CRCT 1                                                             CRCT 1
      SOMA                                                               SOMA
      ARMI 1, -4                                                         ARMI 1, -4
-R04: NADA                                                       |  R03: NADA 
+R03: NADA                                                          R03: NADA 
      CRVL 1, -5                                                         CRVL 1, -5
      IMPR                                                               IMPR
      CRVI 1, -4                                                         CRVI 1, -4
@@ -359,13 +359,13 @@ R02: NADA                                                          R02: NADA
      CRVL 1, 0                                                          CRVL 1, 0
      CRCT 1                                                             CRCT 1
      CMMA                                                               CMMA
-     DSVF R03                                                   |       DSVF R04
+     DSVF R04                                                           DSVF R04
      CHPR R01, 1                                                        CHPR R01, 1
-     DSVS R04                                                   |       DSVS R03
-R03: NADA                                                       |  R04: NADA 
+     DSVS R03                                                           DSVS R03
+R04: NADA                                                          R04: NADA 
      CRCT 1                                                             CRCT 1
      ARMZ 0, 1                                                          ARMZ 0, 1
-R04: NADA                                                       |  R03: NADA 
+R03: NADA                                                          R03: NADA 
      CRVL 0, 1                                                          CRVL 0, 1
      CRVL 1, 0                                                          CRVL 1, 0
      MULT                                                               MULT
@@ -398,13 +398,13 @@ R02: NADA                                                          R02: NADA
      CRVL 1, 0                                                          CRVL 1, 0
      CRCT 1                                                             CRCT 1
      CMMA                                                               CMMA
-     DSVF R03                                                   |       DSVF R04
+     DSVF R04                                                           DSVF R04
      CHPR R01, 1                                                        CHPR R01, 1
-     DSVS R04                                                   |       DSVS R03
-R03: NADA                                                       |  R04: NADA 
+     DSVS R03                                                           DSVS R03
+R04: NADA                                                          R04: NADA 
      CRCT 1                                                             CRCT 1
      ARMZ 0, 1                                                          ARMZ 0, 1
-R04: NADA                                                       |  R03: NADA 
+R03: NADA                                                          R03: NADA 
      CRVL 0, 1                                                          CRVL 0, 1
      CRVL 1, 0                                                          CRVL 1, 0
      MULT                                                               MULT
@@ -426,11 +426,11 @@ R06: NADA                                                          R06: NADA
      CRVL 1, 0                                                          CRVL 1, 0
      CRCT 0                                                             CRCT 0
      CMIG                                                               CMIG
-     DSVF R07                                                   |       DSVF R08
+     DSVF R08                                                           DSVF R08
      CRCT 1                                                             CRCT 1
      ARMZ 0, 1                                                          ARMZ 0, 1
-     DSVS R08                                                   |       DSVS R07
-R07: NADA                                                       |  R08: NADA 
+     DSVS R07                                                           DSVS R07
+R08: NADA                                                          R08: NADA 
      CRVL 1, 0                                                          CRVL 1, 0
      CRCT 2                                                             CRCT 2
      DIVI                                                               DIVI
@@ -438,15 +438,13 @@ R07: NADA                                                       |  R08: NADA
      MULT                                                               MULT
      CRVL 1, 0                                                          CRVL 1, 0
      CMIG                                                               CMIG
-     DSVF R09                                                   |       DSVF R10
+     DSVF R10                                                           DSVF R10
      CHPR R05, 1                                                        CHPR R05, 1
-     DSVS R10                                                   |       DSVS R09
-R09: NADA                                                       <
-     CHPR R01, 1                                                <
+     DSVS R09                                                           DSVS R09
 R10: NADA                                                          R10: NADA 
-R08: NADA                                                       |       CHPR R01, 1
-                                                                >  R09: NADA 
-                                                                >  R07: NADA 
+     CHPR R01, 1                                                        CHPR R01, 1
+R09: NADA                                                          R09: NADA 
+R07: NADA                                                          R07: NADA 
      CRVL 0, 1                                                          CRVL 0, 1
      CRVL 1, 0                                                          CRVL 1, 0
      MULT                                                               MULT
@@ -482,13 +480,13 @@ R04: NADA                                                          R04: NADA
      CRVL 2, 0                                                          CRVL 2, 0
      CRCT 1                                                             CRCT 1
      CMIG                                                               CMIG
-     DSVF R05                                                   |       DSVF R06
+     DSVF R06                                                           DSVF R06
      CHPR R01, 2                                                        CHPR R01, 2
-     DSVS R06                                                   |       DSVS R05
-R05: NADA                                                       |  R06: NADA 
+     DSVS R05                                                           DSVS R05
+R06: NADA                                                          R06: NADA 
      CRCT 1                                                             CRCT 1
      ARMZ 0, 1                                                          ARMZ 0, 1
-R06: NADA                                                       |  R05: NADA 
+R05: NADA                                                          R05: NADA 
      CRVL 0, 1                                                          CRVL 0, 1
      CRVL 2, 0                                                          CRVL 2, 0
      MULT                                                               MULT
@@ -505,13 +503,13 @@ R02: NADA                                                          R02: NADA
      CRVL 1, 0                                                          CRVL 1, 0
      CRCT 1                                                             CRCT 1
      CMMA                                                               CMMA
-     DSVF R07                                                   |       DSVF R08
+     DSVF R08                                                           DSVF R08
      CHPR R01, 1                                                        CHPR R01, 1
-     DSVS R08                                                   |       DSVS R07
-R07: NADA                                                       |  R08: NADA 
+     DSVS R07                                                           DSVS R07
+R08: NADA                                                          R08: NADA 
      CRCT 1                                                             CRCT 1
      ARMZ 0, 1                                                          ARMZ 0, 1
-R08: NADA                                                       |  R07: NADA 
+R07: NADA                                                          R07: NADA 
      CRVL 0, 1                                                          CRVL 0, 1
      CRVL 1, 0                                                          CRVL 1, 0
      MULT                                                               MULT
@@ -536,16 +534,16 @@ R02: NADA                                                          R02: NADA
      CRVL 1, -4                                                         CRVL 1, -4
      CRCT 1                                                             CRCT 1
      CMMA                                                               CMMA
-     DSVF R03                                                   |       DSVF R04
+     DSVF R04                                                           DSVF R04
      CRVL 1, -4                                                         CRVL 1, -4
      CRCT 1                                                             CRCT 1
      SUBT                                                               SUBT
      CHPR R01, 1                                                        CHPR R01, 1
-     DSVS R04                                                   |       DSVS R03
-R03: NADA                                                       |  R04: NADA 
+     DSVS R03                                                           DSVS R03
+R04: NADA                                                          R04: NADA 
      CRCT 1                                                             CRCT 1
      ARMZ 0, 1                                                          ARMZ 0, 1
-R04: NADA                                                       |  R03: NADA 
+R03: NADA                                                          R03: NADA 
      CRVL 0, 1                                                          CRVL 0, 1
      ARMZ 1, 0                                                          ARMZ 1, 0
      CRVL 1, 0                                                          CRVL 1, 0
@@ -573,13 +571,13 @@ R02: NADA                                                          R02: NADA
      CRVL 1, -5                                                         CRVL 1, -5
      CRCT 2                                                             CRCT 2
      CMME                                                               CMME
-     DSVF R03                                                   |       DSVF R04
+     DSVF R04                                                           DSVF R04
      CRVI 1, -4                                                         CRVI 1, -4
      CRVL 1, -5                                                         CRVL 1, -5
      SOMA                                                               SOMA
      ARMI 1, -4                                                         ARMI 1, -4
-     DSVS R04                                                   |       DSVS R03
-R03: NADA                                                       |  R04: NADA 
+     DSVS R03                                                           DSVS R03
+R04: NADA                                                          R04: NADA 
      CRVI 1, -4                                                         CRVI 1, -4
      ARMZ 1, 0                                                          ARMZ 1, 0
      CRVL 1, -5                                                         CRVL 1, -5
@@ -594,7 +592,7 @@ R03: NADA                                                       |  R04: NADA
      SUBT                                                               SUBT
      CRVL 1, -4                                                         CRVL 1, -4
      CHPR R01, 1                                                        CHPR R01, 1
-R04: NADA                                                       |  R03: NADA 
+R03: NADA                                                          R03: NADA 
      CRVL 1, -5                                                         CRVL 1, -5
      IMPR                                                               IMPR
      CRVI 1, -4                                                         CRVI 1, -4

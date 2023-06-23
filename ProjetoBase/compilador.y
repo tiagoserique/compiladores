@@ -635,7 +635,7 @@ if_then:
             exit(1);
          }
 
-         sprintf(mepa_comand, "DSVF R%02d", rotulo_atual);
+         sprintf(mepa_comand, "DSVF R%02d", rotulo_atual+1);
          geraCodigo(NULL, mepa_comand);
 
          pushPilhaInt(&pilhaRotulos, rotulo_atual);
@@ -644,7 +644,7 @@ if_then:
 
    THEN comando_sem_rotulo
       {
-         sprintf(mepa_comand, "DSVS R%02d", topoPilhaInt(&pilhaRotulos) + 1);
+         sprintf(mepa_comand, "DSVS R%02d", topoPilhaInt(&pilhaRotulos));
          geraCodigo(NULL, mepa_comand);
       }
 ;
@@ -652,13 +652,13 @@ if_then:
 cond_else: 
    ELSE 
       {
-         sprintf(mepa_comand, "R%02d", topoPilhaInt(&pilhaRotulos));
+         sprintf(mepa_comand, "R%02d", topoPilhaInt(&pilhaRotulos)+1);
          geraCodigo(mepa_comand, "NADA");
       } 
    
    comando_sem_rotulo
       {
-      sprintf(mepa_comand, "R%02d", topoPilhaInt(&pilhaRotulos) + 1);
+      sprintf(mepa_comand, "R%02d", topoPilhaInt(&pilhaRotulos));
       geraCodigo(mepa_comand, "NADA");
    }
 
