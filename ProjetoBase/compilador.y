@@ -33,6 +33,7 @@ int dentro_chamada_procedimento; // conta chamadas encadeadas de procedimentos
 
 int flag_referencia; // pra passagem por referencia ou nao
 int flag_atribui;
+int flag_escrevendo;
 
 char mepa_comand[128];
 char proc_nome[128];
@@ -224,7 +225,7 @@ ident_params:
 parte_declara_subrotinas: 
    parte_declara_subrotinas 
    declara_procedimento { num_procedimentos_proc_atual++; }
-   // | declara_funcao
+   | declara_funcao { num_procedimentos_proc_atual++; }
    |
 ;
 
@@ -285,12 +286,72 @@ declara_procedimento:
 
 
 // regra 13 ====================================================================
-// // TODO: fazer
-// declara_funcao: FUNCTION IDENT 
-//    ABRE_PARENTESES parte_param_formais FECHA_PARENTESES DOIS_PONTOS IDENT
-//    PONTO_E_VIRGULA
-//    bloco
-// ;
+declara_funcao: 
+   FUNCTION IDENT 
+      {
+         strcpy(proc_nome, token);
+
+         num_params = 0;
+      }
+
+   parte_param_formais 
+      {
+         tipoConteudo conteudo;
+
+         conteudo.proc.rotulo = rotulo_atual;
+
+         char rotulo[128];
+
+         sprintf(rotulo, "R%02d", rotulo_atual);
+         sprintf(mepa_comand, "ENPR %d", nivel_lexico);
+         geraCodigo(rotulo, mepa_comand);
+
+         conteudo.proc.tipoRetorno   = TIPO_UNDEFINED_TYPE;
+         conteudo.proc.qtdParametros = num_params;
+         conteudo.proc.deslocamento  = -(num_params + 4);
+
+         // copia lista de paramtros para a tabela de simbolos 
+         memcpy(conteudo.proc.lista, lista_parametros, sizeof(parametro) * num_params);
+
+         Simbolo s = criaSimbolo(proc_nome, CAT_FUNCAO, nivel_lexico, conteudo);
+         pushTabelaSimbolos(&ts, s);
+         
+         // coloca params com deslocamento correto na tabela de simbolos
+         for (int i = num_params-1; i >= 0; --i){
+            lista_simbolos[i].conteudo.param.deslocamento = -4 + (i - (num_params - 1));
+            pushTabelaSimbolos(&ts, lista_simbolos[i]);
+         }
+
+         rotulo_atual++;
+         
+         pushPilhaInt(&pilhaAmem, num_params);
+      }
+
+   DOIS_PONTOS tipo
+      {
+         Simbolo *s = buscaTabelaSimbolos(&ts, proc_nome);
+
+         if ( s == NULL ){
+            fprintf(stderr, "COMPILATION ERROR!!! funcao nao declarada\n");
+            exit(1);
+         }
+
+         s->conteudo.proc.tipoRetorno = $7;
+      }
+
+   PONTO_E_VIRGULA bloco
+      {
+         removeNTabelaSimbolos(&ts, topoPilhaInt(&pilhaAmem));
+         sprintf(mepa_comand, "RTPR %d, %d", nivel_lexico, topoPilhaInt(&pilhaAmem));
+         geraCodigo(NULL, mepa_comand);
+
+         popPilhaInt(&pilhaAmem);
+         removeNTabelaSimbolos(&ts, topoPilhaInt(&pilhaProcs));
+         popPilhaInt(&pilhaProcs);
+      }
+
+      PONTO_E_VIRGULA
+;
 
 // regra 14 ====================================================================
 param_formais_ou_nada: 
@@ -332,13 +393,11 @@ secao_param_formais:
             conteudo.param.tipo = $5;
             lista_simbolos[i] = criaSimbolo(idents[i], CAT_PARAMETRO, nivel_lexico, conteudo);
          }
-
-         // atribuiTipoTabelaSimbolos(&ts, CAT_PARAMETRO, $4, num_params_section);
       }
 ;
 
 // regra 16 ====================================================================
-comando_composto: T_BEGIN comandos T_END
+comando_composto: T_BEGIN comandos T_END {imprimeTabelaSimbolos(&ts);}
 ;
 
 comandos: 
@@ -389,7 +448,16 @@ item_leitura:
    }
 ;
 
-escrita: WRITE ABRE_PARENTESES escrita_itens FECHA_PARENTESES
+escrita: 
+   WRITE ABRE_PARENTESES
+   {
+      flag_escrevendo = 1;
+   }
+   escrita_itens 
+   {
+      flag_escrevendo = 0;
+   }
+   FECHA_PARENTESES
 ;
 
 escrita_itens: 
@@ -398,8 +466,12 @@ escrita_itens:
 ;
 
 item_escrita:  
+   {
+      printf("aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa token %s \n", token);
+   }
    expressao
    {
+      printf("bBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBb token %s \n", token);
       geraCodigo(NULL, "IMPR");
    }
 ;
@@ -434,32 +506,35 @@ atribuicao_continua:
 
          s_var_ou_proc = topoPilhaSimbolos(&pilhaVarAEsquerda);
 
-        switch (s_var_ou_proc->categoria){
+         imprimeSimbolo(s_var_ou_proc);
+
+         switch (s_var_ou_proc->categoria){
             case CAT_VARIAVEL:
-                sprintf(mepa_comand, "ARMZ %d, %d", s_var_ou_proc->nivel, s_var_ou_proc->conteudo.var.deslocamento);
+               sprintf(mepa_comand, "ARMZ %d, %d", s_var_ou_proc->nivel, s_var_ou_proc->conteudo.var.deslocamento);
             break;
             
             case CAT_PARAMETRO:
-                if (s_var_ou_proc->conteudo.param.passagem == PAS_COPIA){
-                    sprintf(mepa_comand, "ARMZ %d, %d", s_var_ou_proc->nivel, s_var_ou_proc->conteudo.var.deslocamento);
-                }
-                else if (s_var_ou_proc->conteudo.param.passagem == PAS_REFERENCIA){
-                    sprintf(mepa_comand, "ARMI %d, %d", s_var_ou_proc->nivel, s_var_ou_proc->conteudo.var.deslocamento);
-                }
-                else {
-                    fprintf(stderr, "COMPILATION ERROR!!! tipo de passagem de parametror nao especificada\n");
-                    exit(1);
-                }
+               if (s_var_ou_proc->conteudo.param.passagem == PAS_COPIA){
+                  sprintf(mepa_comand, "ARMZ %d, %d", s_var_ou_proc->nivel, s_var_ou_proc->conteudo.var.deslocamento);
+               }
+               else if (s_var_ou_proc->conteudo.param.passagem == PAS_REFERENCIA){
+                  sprintf(mepa_comand, "ARMI %d, %d", s_var_ou_proc->nivel, s_var_ou_proc->conteudo.param.deslocamento);
+               }
+               else {
+                  fprintf(stderr, "COMPILATION ERROR!!! tipo de passagem de parametror nao especificada\n");
+                  exit(1);
+               }
             break;
 
-            // case CAT_FUNCAO:
-            // break;
+            case CAT_FUNCAO:
+               sprintf(mepa_comand, "ARMZ %d, %d", s_var_ou_proc->nivel, s_var_ou_proc->conteudo.proc.deslocamento);
+            break;
 
             default:
-                fprintf(stderr, "COMPILATION ERROR!!! procedimento tratado como variavel\n");
-                exit(1);
+               fprintf(stderr, "COMPILATION ERROR!!! procedimento tratado como variavelaaaaaaa %s\n", s_var_ou_proc->identificador);
+               exit(1);
             break;
-        }
+         }
 
          geraCodigo(NULL, mepa_comand);
       }
@@ -470,7 +545,7 @@ atribuicao_continua:
 // regra 20 ====================================================================
 chamada_de_procedimento:  
    {
-      Simbolo *s_var_ou_proc = topoPilhaSimbolos(&pilhaVarAEsquerda);
+      s_var_ou_proc = topoPilhaSimbolos(&pilhaVarAEsquerda);
 
       if ( s_var_ou_proc == NULL ){
          fprintf(stderr, "COMPILATION ERROR!!! variavel ou procedimento inexistente %s\n", token);
@@ -484,7 +559,7 @@ chamada_de_procedimento:
          geraCodigo(NULL, "AMEM 1");
       }
 
-      sprintf(proc_nome, "CHPR R%02d", s_var_ou_proc->conteudo.proc.rotulo);
+      sprintf(proc_nome, "CHPR R%02d, %d", s_var_ou_proc->conteudo.proc.rotulo, nivel_lexico);
    }
 
    ABRE_PARENTESES 
@@ -520,12 +595,10 @@ procedimento_sem_parametros:
          exit(1);
       }
 
-      sprintf(mepa_comand, "CHPR R%02d", s_var_ou_proc->conteudo.proc.rotulo);
+      sprintf(mepa_comand, "CHPR R%02d, %d", s_var_ou_proc->conteudo.proc.rotulo, nivel_lexico);
       geraCodigo(NULL, mepa_comand);
    }
 ;
-
-                         
 
 // regra 21 ====================================================================
 // // TODO: fazer
@@ -736,7 +809,6 @@ vezes_div_and:
 procedimento_ou_nada :
    chamada_de_procedimento
       {
-                     // run ../arquivos-aula/aula11.pas
          s_var_ou_proc = topoPilhaSimbolos(&pilhaVarAEsquerda);
 
          if ( s_var_ou_proc == NULL ){
@@ -753,7 +825,7 @@ procedimento_ou_nada :
       }
 ;
 
-fator: 
+fator:
       IDENT
          {
             s_ptr = buscaTabelaSimbolos(&ts, token);
@@ -783,7 +855,7 @@ fator:
                      int qtdParametros = s_var_ou_proc->conteudo.proc.qtdParametros;
 
                      if (num_param_chamada_atual > qtdParametros){
-                        fprintf(stderr, "COMPILATION ERROR!!! excesso de parametros em funcao\n");
+                        fprintf(stderr, "COMPILATION ERROR!!! excesso de parametros em funcao %d %s %d\n", num_param_chamada_atual, s_var_ou_proc->identificador, qtdParametros);
                         exit(1);
                      }
 
@@ -803,7 +875,10 @@ fator:
                  
                   else if (flag_atribui && (s_var_ou_proc != NULL && s_var_ou_proc->categoria == CAT_FUNCAO) && s_atribuicao->categoria != CAT_FUNCAO)
                      sprintf(mepa_comand, "CRVL %d, %d", s_ptr->nivel, s_ptr->conteudo.var.deslocamento);
-                 
+                  
+                  // else if (flag_escrevendo && (s_var_ou_proc != NULL && s_var_ou_proc->categoria == CAT_FUNCAO))
+                  //    sprintf(mepa_comand, "CRVL %d, %d", s_ptr->nivel, s_ptr->conteudo.var.deslocamento);
+                  
                   else {
                      flag_imprime = 0;
                   }
@@ -872,7 +947,6 @@ fator:
             $$ = TIPO_BOOLEAN;
             geraCodigo(NULL, "NEGA");
          }
-      // | chamada_de_funcao
 ;
 
 // regra 30 ====================================================================
@@ -891,9 +965,6 @@ fator:
 ;
 
 
-// chamada_de_funcao: IDENT ABRE_PARENTESES lista_expressoes FECHA_PARENTESES
-// ;
-
 
 %%
 
@@ -904,6 +975,7 @@ int main (int argc, char** argv) {
    if (argc<2 || argc>2) {
          printf("usage compilador <arq>a %d\n", argc);
          return(-1);
+;
       }
 
    fp=fopen (argv[1], "r");
