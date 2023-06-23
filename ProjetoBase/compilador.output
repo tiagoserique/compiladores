@@ -1,10 +1,8 @@
 Terminals unused in grammar
 
-    LABEL
     TYPE
     ARRAY
     OF
-    GOTO
     ABRE_COLCHETES
     FECHA_COLCHETES
     ABRE_CHAVES
@@ -23,7 +21,7 @@ Grammar
 
     4 $@3: ε
 
-    5 bloco: parte_declara_vars $@2 parte_declara_subrotinas $@3 comando_composto
+    5 bloco: parte_declara_rotulos parte_declara_vars $@2 parte_declara_subrotinas $@3 comando_composto
 
     6 $@4: ε
 
@@ -93,114 +91,134 @@ Grammar
    43 comandos: comandos $@15 PONTO_E_VIRGULA comando
    44         | comando
 
-   45 comando: comando_sem_rotulo
+   45 label_ou_nada: label
+   46              | ε
 
-   46 comando_sem_rotulo: atribuicao_ou_procedimento
-   47                   | comando_composto
-   48                   | leitura
-   49                   | escrita
-   50                   | comando_condicional
-   51                   | comando_repetitivo
-   52                   | ε
+   47 comando: label_ou_nada comando_sem_rotulo
 
-   53 leitura: READ ABRE_PARENTESES leitura_itens FECHA_PARENTESES
+   48 comando_sem_rotulo: atribuicao_ou_procedimento
+   49                   | comando_composto
+   50                   | leitura
+   51                   | escrita
+   52                   | comando_condicional
+   53                   | comando_repetitivo
+   54                   | desvios
+   55                   | ε
 
-   54 leitura_itens: leitura_itens VIRGULA item_leitura
-   55              | item_leitura
+   56 leitura: READ ABRE_PARENTESES leitura_itens FECHA_PARENTESES
 
-   56 item_leitura: IDENT
+   57 leitura_itens: leitura_itens VIRGULA item_leitura
+   58              | item_leitura
 
-   57 $@16: ε
+   59 item_leitura: IDENT
 
-   58 $@17: ε
+   60 $@16: ε
 
-   59 escrita: WRITE ABRE_PARENTESES $@16 escrita_itens $@17 FECHA_PARENTESES
+   61 $@17: ε
 
-   60 escrita_itens: escrita_itens VIRGULA item_escrita
-   61              | item_escrita
+   62 escrita: WRITE ABRE_PARENTESES $@16 escrita_itens $@17 FECHA_PARENTESES
 
-   62 $@18: ε
+   63 escrita_itens: escrita_itens VIRGULA item_escrita
+   64              | item_escrita
 
-   63 item_escrita: $@18 expressao
+   65 item_escrita: expressao
 
-   64 $@19: ε
+   66 $@18: ε
 
-   65 atribuicao_ou_procedimento: IDENT $@19 atribuicao_continua
+   67 atribuicao_ou_procedimento: IDENT $@18 atribuicao_continua
 
-   66 $@20: ε
+   68 $@19: ε
 
-   67 atribuicao_continua: ATRIBUICAO $@20 expressao
-   68                    | chamada_de_procedimento
-   69                    | procedimento_sem_parametros
+   69 atribuicao_continua: ATRIBUICAO $@19 expressao
+   70                    | chamada_de_procedimento
+   71                    | procedimento_sem_parametros
 
-   70 $@21: ε
+   72 $@20: ε
 
-   71 $@22: ε
+   73 $@21: ε
 
-   72 chamada_de_procedimento: $@21 ABRE_PARENTESES $@22 lista_expressoes FECHA_PARENTESES
+   74 chamada_de_procedimento: $@20 ABRE_PARENTESES $@21 lista_expressoes FECHA_PARENTESES
 
-   73 procedimento_sem_parametros: ε
+   75 procedimento_sem_parametros: ε
 
-   74 comando_condicional: if_then cond_else
+   76 comando_condicional: if_then cond_else
 
-   75 $@23: ε
+   77 $@22: ε
 
-   76 if_then: IF expressao $@23 THEN comando_sem_rotulo
+   78 if_then: IF expressao $@22 THEN comando_sem_rotulo
 
-   77 $@24: ε
+   79 $@23: ε
 
-   78 cond_else: ELSE $@24 comando_sem_rotulo
-   79          | ε
+   80 cond_else: ELSE $@23 comando_sem_rotulo
+   81          | ε
 
-   80 $@25: ε
+   82 $@24: ε
 
-   81 $@26: ε
+   83 $@25: ε
 
-   82 comando_repetitivo: WHILE $@25 expressao $@26 DO comando_sem_rotulo
+   84 comando_repetitivo: WHILE $@24 expressao $@25 DO comando_sem_rotulo
 
-   83 $@27: ε
+   85 $@26: ε
 
-   84 lista_expressoes: expressao $@27 VIRGULA lista_expressoes
-   85                 | expressao
+   86 lista_expressoes: expressao $@26 VIRGULA lista_expressoes
+   87                 | expressao
 
-   86 expressao: expressao_simples
-   87          | expressao_simples relacao expressao_simples
+   88 expressao: expressao_simples
+   89          | expressao_simples relacao expressao_simples
 
-   88 relacao: IGUAL
-   89        | DIFERENTE
-   90        | MENOR
-   91        | MENOR_IGUAL
-   92        | MAIOR
-   93        | MAIOR_IGUAL
+   90 relacao: IGUAL
+   91        | DIFERENTE
+   92        | MENOR
+   93        | MENOR_IGUAL
+   94        | MAIOR
+   95        | MAIOR_IGUAL
 
-   94 expressao_simples: expressao_simples mais_menos_or termo
-   95                  | mais_menos_ou_nada termo
+   96 expressao_simples: expressao_simples mais_menos_or termo
+   97                  | mais_menos_ou_nada termo
 
-   96 mais_menos_ou_nada: MAIS
-   97                   | MENOS
-   98                   | ε
+   98 mais_menos_ou_nada: MAIS
+   99                   | MENOS
+  100                   | ε
 
-   99 mais_menos_or: MAIS
-  100              | MENOS
-  101              | OR
+  101 mais_menos_or: MAIS
+  102              | MENOS
+  103              | OR
 
-  102 termo: termo vezes_div_and fator
-  103      | fator
+  104 termo: termo vezes_div_and fator
+  105      | fator
 
-  104 vezes_div_and: VEZES
-  105              | DIV
-  106              | AND
+  106 vezes_div_and: VEZES
+  107              | DIV
+  108              | AND
 
-  107 procedimento_ou_nada: chamada_de_procedimento
-  108                     | ε
+  109 procedimento_ou_nada: chamada_de_procedimento
+  110                     | ε
 
-  109 $@28: ε
+  111 $@27: ε
 
-  110 fator: IDENT $@28 procedimento_ou_nada
-  111      | NUMERO
-  112      | VALOR_BOOL
-  113      | ABRE_PARENTESES expressao FECHA_PARENTESES
-  114      | NOT fator
+  112 fator: IDENT $@27 procedimento_ou_nada
+  113      | NUMERO
+  114      | VALOR_BOOL
+  115      | ABRE_PARENTESES expressao FECHA_PARENTESES
+  116      | NOT fator
+
+  117 parte_declara_rotulos: declara_labels
+  118                      | ε
+
+  119 $@28: ε
+
+  120 declara_labels: LABEL $@28 lista_de_labels PONTO_E_VIRGULA
+
+  121 lista_de_labels: lista_de_labels VIRGULA numero
+  122                | numero
+
+  123 numero: NUMERO
+
+  124 $@29: ε
+
+  125 label: NUMERO $@29 DOIS_PONTOS
+
+  126 desvios: GOTO NUMERO
 
 
 Terminals, with rules where they appear
@@ -208,47 +226,47 @@ Terminals, with rules where they appear
     $end (0) 0
     error (256)
     PROGRAM (258) 2
-    ABRE_PARENTESES (259) 2 34 53 59 72 113
-    FECHA_PARENTESES (260) 2 34 53 59 72 113
-    VIRGULA (261) 15 17 54 60 84
-    PONTO_E_VIRGULA (262) 2 13 26 31 35 43
-    DOIS_PONTOS (263) 13 31 40
+    ABRE_PARENTESES (259) 2 34 56 62 74 115
+    FECHA_PARENTESES (260) 2 34 56 62 74 115
+    VIRGULA (261) 15 17 57 63 86 121
+    PONTO_E_VIRGULA (262) 2 13 26 31 35 43 120
+    DOIS_PONTOS (263) 13 31 40 125
     PONTO (264) 2
     T_BEGIN (265) 41
     T_END (266) 41
     VAR (267) 7 37
-    IDENT (268) 2 15 16 19 26 31 56 65 110
-    ATRIBUICAO (269) 67
+    IDENT (268) 2 15 16 19 26 31 59 67 112
+    ATRIBUICAO (269) 69
     TIPO (270) 14
     PROCEDURE (271) 26
     FUNCTION (272) 31
-    IGUAL (273) 88
-    MENOR (274) 90
-    MENOR_IGUAL (275) 91
-    MAIOR (276) 92
-    MAIOR_IGUAL (277) 93
-    DIFERENTE (278) 89
-    AND (279) 106
-    OR (280) 101
-    NOT (281) 114
-    DIV (282) 105
-    VEZES (283) 104
-    MENOS (284) 97 100
-    MAIS (285) 96 99
-    IF (286) 76
-    THEN (287) 76
-    ELSE (288) 78
-    WHILE (289) 82
-    DO (290) 82
-    READ (291) 53
-    WRITE (292) 59
-    NUMERO (293) 111
-    VALOR_BOOL (294) 112
-    LABEL (295)
+    IGUAL (273) 90
+    MENOR (274) 92
+    MENOR_IGUAL (275) 93
+    MAIOR (276) 94
+    MAIOR_IGUAL (277) 95
+    DIFERENTE (278) 91
+    AND (279) 108
+    OR (280) 103
+    NOT (281) 116
+    DIV (282) 107
+    VEZES (283) 106
+    MENOS (284) 99 102
+    MAIS (285) 98 101
+    IF (286) 78
+    THEN (287) 78
+    ELSE (288) 80
+    WHILE (289) 84
+    DO (290) 84
+    READ (291) 56
+    WRITE (292) 62
+    NUMERO (293) 113 123 125 126
+    VALOR_BOOL (294) 114
+    LABEL (295) 120
     TYPE (296)
     ARRAY (297)
     OF (298)
-    GOTO (299)
+    GOTO (299) 126
     ABRE_COLCHETES (300)
     FECHA_COLCHETES (301)
     ABRE_CHAVES (302)
@@ -355,130 +373,154 @@ Nonterminals, with rules where they appear
         on right: 40
     comando_composto (82)
         on left: 41
-        on right: 5 47
+        on right: 5 49
     comandos (83)
         on left: 43 44
         on right: 41 43
     $@15 (84)
         on left: 42
         on right: 43
-    comando (85)
-        on left: 45
+    label_ou_nada (85)
+        on left: 45 46
+        on right: 47
+    comando (86)
+        on left: 47
         on right: 43 44
-    comando_sem_rotulo (86)
-        on left: 46 47 48 49 50 51 52
-        on right: 45 76 78 82
-    leitura (87)
-        on left: 53
-        on right: 48
-    leitura_itens (88)
-        on left: 54 55
-        on right: 53 54
-    item_leitura (89)
+    comando_sem_rotulo (87)
+        on left: 48 49 50 51 52 53 54 55
+        on right: 47 78 80 84
+    leitura (88)
         on left: 56
-        on right: 54 55
-    escrita (90)
+        on right: 50
+    leitura_itens (89)
+        on left: 57 58
+        on right: 56 57
+    item_leitura (90)
         on left: 59
-        on right: 49
-    $@16 (91)
-        on left: 57
-        on right: 59
-    $@17 (92)
-        on left: 58
-        on right: 59
-    escrita_itens (93)
-        on left: 60 61
-        on right: 59 60
-    item_escrita (94)
-        on left: 63
-        on right: 60 61
-    $@18 (95)
+        on right: 57 58
+    escrita (91)
         on left: 62
-        on right: 63
-    atribuicao_ou_procedimento (96)
+        on right: 51
+    $@16 (92)
+        on left: 60
+        on right: 62
+    $@17 (93)
+        on left: 61
+        on right: 62
+    escrita_itens (94)
+        on left: 63 64
+        on right: 62 63
+    item_escrita (95)
         on left: 65
-        on right: 46
-    $@19 (97)
-        on left: 64
-        on right: 65
-    atribuicao_continua (98)
-        on left: 67 68 69
-        on right: 65
-    $@20 (99)
+        on right: 63 64
+    atribuicao_ou_procedimento (96)
+        on left: 67
+        on right: 48
+    $@18 (97)
         on left: 66
         on right: 67
-    chamada_de_procedimento (100)
-        on left: 72
-        on right: 68 107
-    $@21 (101)
-        on left: 70
-        on right: 72
-    $@22 (102)
-        on left: 71
-        on right: 72
-    procedimento_sem_parametros (103)
-        on left: 73
+    atribuicao_continua (98)
+        on left: 69 70 71
+        on right: 67
+    $@19 (99)
+        on left: 68
         on right: 69
-    comando_condicional (104)
+    chamada_de_procedimento (100)
         on left: 74
-        on right: 50
-    if_then (105)
-        on left: 76
+        on right: 70 109
+    $@20 (101)
+        on left: 72
         on right: 74
-    $@23 (106)
+    $@21 (102)
+        on left: 73
+        on right: 74
+    procedimento_sem_parametros (103)
         on left: 75
+        on right: 71
+    comando_condicional (104)
+        on left: 76
+        on right: 52
+    if_then (105)
+        on left: 78
         on right: 76
-    cond_else (107)
-        on left: 78 79
-        on right: 74
-    $@24 (108)
+    $@22 (106)
         on left: 77
         on right: 78
+    cond_else (107)
+        on left: 80 81
+        on right: 76
+    $@23 (108)
+        on left: 79
+        on right: 80
     comando_repetitivo (109)
+        on left: 84
+        on right: 53
+    $@24 (110)
         on left: 82
-        on right: 51
-    $@25 (110)
-        on left: 80
-        on right: 82
-    $@26 (111)
-        on left: 81
-        on right: 82
-    lista_expressoes (112)
-        on left: 84 85
-        on right: 72 84
-    $@27 (113)
+        on right: 84
+    $@25 (111)
         on left: 83
         on right: 84
-    expressao <int_val> (114)
+    lista_expressoes (112)
         on left: 86 87
-        on right: 63 67 76 82 84 85 113
+        on right: 74 86
+    $@26 (113)
+        on left: 85
+        on right: 86
+    expressao <int_val> (114)
+        on left: 88 89
+        on right: 65 69 78 84 86 87 115
     relacao <str> (115)
-        on left: 88 89 90 91 92 93
-        on right: 87
+        on left: 90 91 92 93 94 95
+        on right: 89
     expressao_simples <int_val> (116)
-        on left: 94 95
-        on right: 86 87 94
+        on left: 96 97
+        on right: 88 89 96
     mais_menos_ou_nada <str> (117)
-        on left: 96 97 98
-        on right: 95
+        on left: 98 99 100
+        on right: 97
     mais_menos_or <str> (118)
-        on left: 99 100 101
-        on right: 94
+        on left: 101 102 103
+        on right: 96
     termo <int_val> (119)
-        on left: 102 103
-        on right: 94 95 102
+        on left: 104 105
+        on right: 96 97 104
     vezes_div_and <str> (120)
-        on left: 104 105 106
-        on right: 102
+        on left: 106 107 108
+        on right: 104
     procedimento_ou_nada (121)
-        on left: 107 108
-        on right: 110
+        on left: 109 110
+        on right: 112
     fator <int_val> (122)
-        on left: 110 111 112 113 114
-        on right: 102 103 114
-    $@28 (123)
-        on left: 109
-        on right: 110
+        on left: 112 113 114 115 116
+        on right: 104 105 116
+    $@27 (123)
+        on left: 111
+        on right: 112
+    parte_declara_rotulos (124)
+        on left: 117 118
+        on right: 5
+    declara_labels (125)
+        on left: 120
+        on right: 117
+    $@28 (126)
+        on left: 119
+        on right: 120
+    lista_de_labels (127)
+        on left: 121 122
+        on right: 120 121
+    numero (128)
+        on left: 123
+        on right: 121 122
+    label (129)
+        on left: 125
+        on right: 45
+    $@29 (130)
+        on left: 124
+        on right: 125
+    desvios (131)
+        on left: 126
+        on right: 54
 
 
 State 0
@@ -579,12 +621,13 @@ State 12
 
     2 programa: $@1 PROGRAM IDENT ABRE_PARENTESES lista_idents FECHA_PARENTESES PONTO_E_VIRGULA • bloco PONTO
 
-    VAR       reduce using rule 6 ($@4)
-    $default  reduce using rule 8 (parte_declara_vars)
+    LABEL  shift, and go to state 14
 
-    bloco               go to state 14
-    parte_declara_vars  go to state 15
-    $@4                 go to state 16
+    $default  reduce using rule 118 (parte_declara_rotulos)
+
+    bloco                  go to state 15
+    parte_declara_rotulos  go to state 16
+    declara_labels         go to state 17
 
 
 State 13
@@ -596,85 +639,161 @@ State 13
 
 State 14
 
-    2 programa: $@1 PROGRAM IDENT ABRE_PARENTESES lista_idents FECHA_PARENTESES PONTO_E_VIRGULA bloco • PONTO
+  120 declara_labels: LABEL • $@28 lista_de_labels PONTO_E_VIRGULA
 
-    PONTO  shift, and go to state 17
+    $default  reduce using rule 119 ($@28)
+
+    $@28  go to state 18
 
 
 State 15
 
-    5 bloco: parte_declara_vars • $@2 parte_declara_subrotinas $@3 comando_composto
+    2 programa: $@1 PROGRAM IDENT ABRE_PARENTESES lista_idents FECHA_PARENTESES PONTO_E_VIRGULA bloco • PONTO
 
-    $default  reduce using rule 3 ($@2)
-
-    $@2  go to state 18
+    PONTO  shift, and go to state 19
 
 
 State 16
 
-    7 parte_declara_vars: $@4 • VAR declara_vars
+    5 bloco: parte_declara_rotulos • parte_declara_vars $@2 parte_declara_subrotinas $@3 comando_composto
 
-    VAR  shift, and go to state 19
+    VAR       reduce using rule 6 ($@4)
+    $default  reduce using rule 8 (parte_declara_vars)
+
+    parte_declara_vars  go to state 20
+    $@4                 go to state 21
 
 
 State 17
+
+  117 parte_declara_rotulos: declara_labels •
+
+    $default  reduce using rule 117 (parte_declara_rotulos)
+
+
+State 18
+
+  120 declara_labels: LABEL $@28 • lista_de_labels PONTO_E_VIRGULA
+
+    NUMERO  shift, and go to state 22
+
+    lista_de_labels  go to state 23
+    numero           go to state 24
+
+
+State 19
 
     2 programa: $@1 PROGRAM IDENT ABRE_PARENTESES lista_idents FECHA_PARENTESES PONTO_E_VIRGULA bloco PONTO •
 
     $default  reduce using rule 2 (programa)
 
 
-State 18
+State 20
 
-    5 bloco: parte_declara_vars $@2 • parte_declara_subrotinas $@3 comando_composto
+    5 bloco: parte_declara_rotulos parte_declara_vars • $@2 parte_declara_subrotinas $@3 comando_composto
 
-    FUNCTION  shift, and go to state 20
+    $default  reduce using rule 3 ($@2)
+
+    $@2  go to state 25
+
+
+State 21
+
+    7 parte_declara_vars: $@4 • VAR declara_vars
+
+    VAR  shift, and go to state 26
+
+
+State 22
+
+  123 numero: NUMERO •
+
+    $default  reduce using rule 123 (numero)
+
+
+State 23
+
+  120 declara_labels: LABEL $@28 lista_de_labels • PONTO_E_VIRGULA
+  121 lista_de_labels: lista_de_labels • VIRGULA numero
+
+    VIRGULA          shift, and go to state 27
+    PONTO_E_VIRGULA  shift, and go to state 28
+
+
+State 24
+
+  122 lista_de_labels: numero •
+
+    $default  reduce using rule 122 (lista_de_labels)
+
+
+State 25
+
+    5 bloco: parte_declara_rotulos parte_declara_vars $@2 • parte_declara_subrotinas $@3 comando_composto
+
+    FUNCTION  shift, and go to state 29
 
     $default  reduce using rule 22 (parte_declara_subrotinas)
 
-    parte_declara_subrotinas  go to state 21
-    declara_funcao            go to state 22
+    parte_declara_subrotinas  go to state 30
+    declara_funcao            go to state 31
 
 
-State 19
+State 26
 
     7 parte_declara_vars: $@4 VAR • declara_vars
 
     $default  reduce using rule 11 ($@5)
 
-    declara_vars  go to state 23
-    declara_var   go to state 24
-    $@5           go to state 25
+    declara_vars  go to state 32
+    declara_var   go to state 33
+    $@5           go to state 34
 
 
-State 20
+State 27
+
+  121 lista_de_labels: lista_de_labels VIRGULA • numero
+
+    NUMERO  shift, and go to state 22
+
+    numero  go to state 35
+
+
+State 28
+
+  120 declara_labels: LABEL $@28 lista_de_labels PONTO_E_VIRGULA •
+
+    $default  reduce using rule 120 (declara_labels)
+
+
+State 29
 
    31 declara_funcao: FUNCTION • IDENT $@10 parte_param_formais $@11 DOIS_PONTOS tipo $@12 PONTO_E_VIRGULA bloco $@13 PONTO_E_VIRGULA
 
-    IDENT  shift, and go to state 26
+    IDENT  shift, and go to state 36
 
 
-State 21
+State 30
 
-    5 bloco: parte_declara_vars $@2 parte_declara_subrotinas • $@3 comando_composto
+    5 bloco: parte_declara_rotulos parte_declara_vars $@2 parte_declara_subrotinas • $@3 comando_composto
    20 parte_declara_subrotinas: parte_declara_subrotinas • declara_procedimento
 
-    PROCEDURE  shift, and go to state 27
+    PROCEDURE  shift, and go to state 37
 
     $default  reduce using rule 4 ($@3)
 
-    $@3                   go to state 28
-    declara_procedimento  go to state 29
+    $@3                   go to state 38
+    declara_procedimento  go to state 39
 
 
-State 22
+State 31
 
    21 parte_declara_subrotinas: declara_funcao •
 
     $default  reduce using rule 21 (parte_declara_subrotinas)
 
 
-State 23
+State 32
 
     7 parte_declara_vars: $@4 VAR declara_vars •
     9 declara_vars: declara_vars • declara_var
@@ -682,139 +801,135 @@ State 23
     IDENT     reduce using rule 11 ($@5)
     $default  reduce using rule 7 (parte_declara_vars)
 
-    declara_var  go to state 30
-    $@5          go to state 25
+    declara_var  go to state 40
+    $@5          go to state 34
 
 
-State 24
+State 33
 
    10 declara_vars: declara_var •
 
     $default  reduce using rule 10 (declara_vars)
 
 
-State 25
+State 34
 
    13 declara_var: $@5 • lista_id_var DOIS_PONTOS tipo $@6 PONTO_E_VIRGULA
 
-    IDENT  shift, and go to state 31
+    IDENT  shift, and go to state 41
 
-    lista_id_var  go to state 32
+    lista_id_var  go to state 42
 
 
-State 26
+State 35
+
+  121 lista_de_labels: lista_de_labels VIRGULA numero •
+
+    $default  reduce using rule 121 (lista_de_labels)
+
+
+State 36
 
    31 declara_funcao: FUNCTION IDENT • $@10 parte_param_formais $@11 DOIS_PONTOS tipo $@12 PONTO_E_VIRGULA bloco $@13 PONTO_E_VIRGULA
 
     $default  reduce using rule 27 ($@10)
 
-    $@10  go to state 33
+    $@10  go to state 43
 
 
-State 27
+State 37
 
    26 declara_procedimento: PROCEDURE • IDENT $@7 param_formais_ou_nada $@8 PONTO_E_VIRGULA bloco $@9 PONTO_E_VIRGULA
 
-    IDENT  shift, and go to state 34
+    IDENT  shift, and go to state 44
 
 
-State 28
+State 38
 
-    5 bloco: parte_declara_vars $@2 parte_declara_subrotinas $@3 • comando_composto
+    5 bloco: parte_declara_rotulos parte_declara_vars $@2 parte_declara_subrotinas $@3 • comando_composto
 
-    T_BEGIN  shift, and go to state 35
+    T_BEGIN  shift, and go to state 45
 
-    comando_composto  go to state 36
+    comando_composto  go to state 46
 
 
-State 29
+State 39
 
    20 parte_declara_subrotinas: parte_declara_subrotinas declara_procedimento •
 
     $default  reduce using rule 20 (parte_declara_subrotinas)
 
 
-State 30
+State 40
 
     9 declara_vars: declara_vars declara_var •
 
     $default  reduce using rule 9 (declara_vars)
 
 
-State 31
+State 41
 
    16 lista_id_var: IDENT •
 
     $default  reduce using rule 16 (lista_id_var)
 
 
-State 32
+State 42
 
    13 declara_var: $@5 lista_id_var • DOIS_PONTOS tipo $@6 PONTO_E_VIRGULA
    15 lista_id_var: lista_id_var • VIRGULA IDENT
 
-    VIRGULA      shift, and go to state 37
-    DOIS_PONTOS  shift, and go to state 38
+    VIRGULA      shift, and go to state 47
+    DOIS_PONTOS  shift, and go to state 48
 
 
-State 33
+State 43
 
    31 declara_funcao: FUNCTION IDENT $@10 • parte_param_formais $@11 DOIS_PONTOS tipo $@12 PONTO_E_VIRGULA bloco $@13 PONTO_E_VIRGULA
 
-    ABRE_PARENTESES  shift, and go to state 39
+    ABRE_PARENTESES  shift, and go to state 49
 
-    parte_param_formais  go to state 40
+    parte_param_formais  go to state 50
 
 
-State 34
+State 44
 
    26 declara_procedimento: PROCEDURE IDENT • $@7 param_formais_ou_nada $@8 PONTO_E_VIRGULA bloco $@9 PONTO_E_VIRGULA
 
     $default  reduce using rule 23 ($@7)
 
-    $@7  go to state 41
+    $@7  go to state 51
 
 
-State 35
+State 45
 
    41 comando_composto: T_BEGIN • comandos T_END
 
-    T_BEGIN  shift, and go to state 35
-    IDENT    shift, and go to state 42
-    IF       shift, and go to state 43
-    WHILE    shift, and go to state 44
-    READ     shift, and go to state 45
-    WRITE    shift, and go to state 46
+    NUMERO  shift, and go to state 52
 
-    $default  reduce using rule 52 (comando_sem_rotulo)
+    $default  reduce using rule 46 (label_ou_nada)
 
-    comando_composto            go to state 47
-    comandos                    go to state 48
-    comando                     go to state 49
-    comando_sem_rotulo          go to state 50
-    leitura                     go to state 51
-    escrita                     go to state 52
-    atribuicao_ou_procedimento  go to state 53
-    comando_condicional         go to state 54
-    if_then                     go to state 55
-    comando_repetitivo          go to state 56
+    comandos       go to state 53
+    label_ou_nada  go to state 54
+    comando        go to state 55
+    label          go to state 56
 
 
-State 36
+State 46
 
-    5 bloco: parte_declara_vars $@2 parte_declara_subrotinas $@3 comando_composto •
+    5 bloco: parte_declara_rotulos parte_declara_vars $@2 parte_declara_subrotinas $@3 comando_composto •
 
     $default  reduce using rule 5 (bloco)
 
 
-State 37
+State 47
 
    15 lista_id_var: lista_id_var VIRGULA • IDENT
 
     IDENT  shift, and go to state 57
 
 
-State 38
+State 48
 
    13 declara_var: $@5 lista_id_var DOIS_PONTOS • tipo $@6 PONTO_E_VIRGULA
 
@@ -823,7 +938,7 @@ State 38
     tipo  go to state 59
 
 
-State 39
+State 49
 
    34 parte_param_formais: ABRE_PARENTESES • parametros FECHA_PARENTESES
 
@@ -836,7 +951,7 @@ State 39
     secao_param_formais  go to state 63
 
 
-State 40
+State 50
 
    31 declara_funcao: FUNCTION IDENT $@10 parte_param_formais • $@11 DOIS_PONTOS tipo $@12 PONTO_E_VIRGULA bloco $@13 PONTO_E_VIRGULA
 
@@ -845,11 +960,11 @@ State 40
     $@11  go to state 64
 
 
-State 41
+State 51
 
    26 declara_procedimento: PROCEDURE IDENT $@7 • param_formais_ou_nada $@8 PONTO_E_VIRGULA bloco $@9 PONTO_E_VIRGULA
 
-    ABRE_PARENTESES  shift, and go to state 39
+    ABRE_PARENTESES  shift, and go to state 49
 
     $default  reduce using rule 33 (param_formais_ou_nada)
 
@@ -857,129 +972,64 @@ State 41
     parte_param_formais    go to state 66
 
 
-State 42
+State 52
 
-   65 atribuicao_ou_procedimento: IDENT • $@19 atribuicao_continua
+  125 label: NUMERO • $@29 DOIS_PONTOS
 
-    $default  reduce using rule 64 ($@19)
+    $default  reduce using rule 124 ($@29)
 
-    $@19  go to state 67
-
-
-State 43
-
-   76 if_then: IF • expressao $@23 THEN comando_sem_rotulo
-
-    MENOS  shift, and go to state 68
-    MAIS   shift, and go to state 69
-
-    $default  reduce using rule 98 (mais_menos_ou_nada)
-
-    expressao           go to state 70
-    expressao_simples   go to state 71
-    mais_menos_ou_nada  go to state 72
+    $@29  go to state 67
 
 
-State 44
-
-   82 comando_repetitivo: WHILE • $@25 expressao $@26 DO comando_sem_rotulo
-
-    $default  reduce using rule 80 ($@25)
-
-    $@25  go to state 73
-
-
-State 45
-
-   53 leitura: READ • ABRE_PARENTESES leitura_itens FECHA_PARENTESES
-
-    ABRE_PARENTESES  shift, and go to state 74
-
-
-State 46
-
-   59 escrita: WRITE • ABRE_PARENTESES $@16 escrita_itens $@17 FECHA_PARENTESES
-
-    ABRE_PARENTESES  shift, and go to state 75
-
-
-State 47
-
-   47 comando_sem_rotulo: comando_composto •
-
-    $default  reduce using rule 47 (comando_sem_rotulo)
-
-
-State 48
+State 53
 
    41 comando_composto: T_BEGIN comandos • T_END
    43 comandos: comandos • $@15 PONTO_E_VIRGULA comando
 
-    T_END  shift, and go to state 76
+    T_END  shift, and go to state 68
 
     $default  reduce using rule 42 ($@15)
 
-    $@15  go to state 77
+    $@15  go to state 69
 
 
-State 49
+State 54
+
+   47 comando: label_ou_nada • comando_sem_rotulo
+
+    T_BEGIN  shift, and go to state 45
+    IDENT    shift, and go to state 70
+    IF       shift, and go to state 71
+    WHILE    shift, and go to state 72
+    READ     shift, and go to state 73
+    WRITE    shift, and go to state 74
+    GOTO     shift, and go to state 75
+
+    $default  reduce using rule 55 (comando_sem_rotulo)
+
+    comando_composto            go to state 76
+    comando_sem_rotulo          go to state 77
+    leitura                     go to state 78
+    escrita                     go to state 79
+    atribuicao_ou_procedimento  go to state 80
+    comando_condicional         go to state 81
+    if_then                     go to state 82
+    comando_repetitivo          go to state 83
+    desvios                     go to state 84
+
+
+State 55
 
    44 comandos: comando •
 
     $default  reduce using rule 44 (comandos)
 
 
-State 50
-
-   45 comando: comando_sem_rotulo •
-
-    $default  reduce using rule 45 (comando)
-
-
-State 51
-
-   48 comando_sem_rotulo: leitura •
-
-    $default  reduce using rule 48 (comando_sem_rotulo)
-
-
-State 52
-
-   49 comando_sem_rotulo: escrita •
-
-    $default  reduce using rule 49 (comando_sem_rotulo)
-
-
-State 53
-
-   46 comando_sem_rotulo: atribuicao_ou_procedimento •
-
-    $default  reduce using rule 46 (comando_sem_rotulo)
-
-
-State 54
-
-   50 comando_sem_rotulo: comando_condicional •
-
-    $default  reduce using rule 50 (comando_sem_rotulo)
-
-
-State 55
-
-   74 comando_condicional: if_then • cond_else
-
-    ELSE  shift, and go to state 78
-
-    $default  reduce using rule 79 (cond_else)
-
-    cond_else  go to state 79
-
-
 State 56
 
-   51 comando_sem_rotulo: comando_repetitivo •
+   45 label_ou_nada: label •
 
-    $default  reduce using rule 51 (comando_sem_rotulo)
+    $default  reduce using rule 45 (label_ou_nada)
 
 
 State 57
@@ -1002,7 +1052,7 @@ State 59
 
     $default  reduce using rule 12 ($@6)
 
-    $@6  go to state 80
+    $@6  go to state 85
 
 
 State 60
@@ -1016,7 +1066,7 @@ State 61
 
    34 parte_param_formais: ABRE_PARENTESES parametros • FECHA_PARENTESES
 
-    FECHA_PARENTESES  shift, and go to state 81
+    FECHA_PARENTESES  shift, and go to state 86
 
 
 State 62
@@ -1025,7 +1075,7 @@ State 62
 
     $default  reduce using rule 39 ($@14)
 
-    $@14  go to state 82
+    $@14  go to state 87
 
 
 State 63
@@ -1033,7 +1083,7 @@ State 63
    35 parametros: secao_param_formais • PONTO_E_VIRGULA secao_param_formais
    36           | secao_param_formais •
 
-    PONTO_E_VIRGULA  shift, and go to state 83
+    PONTO_E_VIRGULA  shift, and go to state 88
 
     $default  reduce using rule 36 (parametros)
 
@@ -1042,7 +1092,7 @@ State 64
 
    31 declara_funcao: FUNCTION IDENT $@10 parte_param_formais $@11 • DOIS_PONTOS tipo $@12 PONTO_E_VIRGULA bloco $@13 PONTO_E_VIRGULA
 
-    DOIS_PONTOS  shift, and go to state 84
+    DOIS_PONTOS  shift, and go to state 89
 
 
 State 65
@@ -1051,7 +1101,7 @@ State 65
 
     $default  reduce using rule 24 ($@8)
 
-    $@8  go to state 85
+    $@8  go to state 90
 
 
 State 66
@@ -1063,166 +1113,170 @@ State 66
 
 State 67
 
-   65 atribuicao_ou_procedimento: IDENT $@19 • atribuicao_continua
+  125 label: NUMERO $@29 • DOIS_PONTOS
 
-    ATRIBUICAO  shift, and go to state 86
-
-    ABRE_PARENTESES  reduce using rule 70 ($@21)
-    $default         reduce using rule 73 (procedimento_sem_parametros)
-
-    atribuicao_continua          go to state 87
-    chamada_de_procedimento      go to state 88
-    $@21                         go to state 89
-    procedimento_sem_parametros  go to state 90
+    DOIS_PONTOS  shift, and go to state 91
 
 
 State 68
-
-   97 mais_menos_ou_nada: MENOS •
-
-    $default  reduce using rule 97 (mais_menos_ou_nada)
-
-
-State 69
-
-   96 mais_menos_ou_nada: MAIS •
-
-    $default  reduce using rule 96 (mais_menos_ou_nada)
-
-
-State 70
-
-   76 if_then: IF expressao • $@23 THEN comando_sem_rotulo
-
-    $default  reduce using rule 75 ($@23)
-
-    $@23  go to state 91
-
-
-State 71
-
-   86 expressao: expressao_simples •
-   87          | expressao_simples • relacao expressao_simples
-   94 expressao_simples: expressao_simples • mais_menos_or termo
-
-    IGUAL        shift, and go to state 92
-    MENOR        shift, and go to state 93
-    MENOR_IGUAL  shift, and go to state 94
-    MAIOR        shift, and go to state 95
-    MAIOR_IGUAL  shift, and go to state 96
-    DIFERENTE    shift, and go to state 97
-    OR           shift, and go to state 98
-    MENOS        shift, and go to state 99
-    MAIS         shift, and go to state 100
-
-    $default  reduce using rule 86 (expressao)
-
-    relacao        go to state 101
-    mais_menos_or  go to state 102
-
-
-State 72
-
-   95 expressao_simples: mais_menos_ou_nada • termo
-
-    ABRE_PARENTESES  shift, and go to state 103
-    IDENT            shift, and go to state 104
-    NOT              shift, and go to state 105
-    NUMERO           shift, and go to state 106
-    VALOR_BOOL       shift, and go to state 107
-
-    termo  go to state 108
-    fator  go to state 109
-
-
-State 73
-
-   82 comando_repetitivo: WHILE $@25 • expressao $@26 DO comando_sem_rotulo
-
-    MENOS  shift, and go to state 68
-    MAIS   shift, and go to state 69
-
-    $default  reduce using rule 98 (mais_menos_ou_nada)
-
-    expressao           go to state 110
-    expressao_simples   go to state 71
-    mais_menos_ou_nada  go to state 72
-
-
-State 74
-
-   53 leitura: READ ABRE_PARENTESES • leitura_itens FECHA_PARENTESES
-
-    IDENT  shift, and go to state 111
-
-    leitura_itens  go to state 112
-    item_leitura   go to state 113
-
-
-State 75
-
-   59 escrita: WRITE ABRE_PARENTESES • $@16 escrita_itens $@17 FECHA_PARENTESES
-
-    $default  reduce using rule 57 ($@16)
-
-    $@16  go to state 114
-
-
-State 76
 
    41 comando_composto: T_BEGIN comandos T_END •
 
     $default  reduce using rule 41 (comando_composto)
 
 
-State 77
+State 69
 
    43 comandos: comandos $@15 • PONTO_E_VIRGULA comando
 
-    PONTO_E_VIRGULA  shift, and go to state 115
+    PONTO_E_VIRGULA  shift, and go to state 92
+
+
+State 70
+
+   67 atribuicao_ou_procedimento: IDENT • $@18 atribuicao_continua
+
+    $default  reduce using rule 66 ($@18)
+
+    $@18  go to state 93
+
+
+State 71
+
+   78 if_then: IF • expressao $@22 THEN comando_sem_rotulo
+
+    MENOS  shift, and go to state 94
+    MAIS   shift, and go to state 95
+
+    $default  reduce using rule 100 (mais_menos_ou_nada)
+
+    expressao           go to state 96
+    expressao_simples   go to state 97
+    mais_menos_ou_nada  go to state 98
+
+
+State 72
+
+   84 comando_repetitivo: WHILE • $@24 expressao $@25 DO comando_sem_rotulo
+
+    $default  reduce using rule 82 ($@24)
+
+    $@24  go to state 99
+
+
+State 73
+
+   56 leitura: READ • ABRE_PARENTESES leitura_itens FECHA_PARENTESES
+
+    ABRE_PARENTESES  shift, and go to state 100
+
+
+State 74
+
+   62 escrita: WRITE • ABRE_PARENTESES $@16 escrita_itens $@17 FECHA_PARENTESES
+
+    ABRE_PARENTESES  shift, and go to state 101
+
+
+State 75
+
+  126 desvios: GOTO • NUMERO
+
+    NUMERO  shift, and go to state 102
+
+
+State 76
+
+   49 comando_sem_rotulo: comando_composto •
+
+    $default  reduce using rule 49 (comando_sem_rotulo)
+
+
+State 77
+
+   47 comando: label_ou_nada comando_sem_rotulo •
+
+    $default  reduce using rule 47 (comando)
 
 
 State 78
 
-   78 cond_else: ELSE • $@24 comando_sem_rotulo
+   50 comando_sem_rotulo: leitura •
 
-    $default  reduce using rule 77 ($@24)
-
-    $@24  go to state 116
+    $default  reduce using rule 50 (comando_sem_rotulo)
 
 
 State 79
 
-   74 comando_condicional: if_then cond_else •
+   51 comando_sem_rotulo: escrita •
 
-    $default  reduce using rule 74 (comando_condicional)
+    $default  reduce using rule 51 (comando_sem_rotulo)
 
 
 State 80
 
-   13 declara_var: $@5 lista_id_var DOIS_PONTOS tipo $@6 • PONTO_E_VIRGULA
+   48 comando_sem_rotulo: atribuicao_ou_procedimento •
 
-    PONTO_E_VIRGULA  shift, and go to state 117
+    $default  reduce using rule 48 (comando_sem_rotulo)
 
 
 State 81
+
+   52 comando_sem_rotulo: comando_condicional •
+
+    $default  reduce using rule 52 (comando_sem_rotulo)
+
+
+State 82
+
+   76 comando_condicional: if_then • cond_else
+
+    ELSE  shift, and go to state 103
+
+    $default  reduce using rule 81 (cond_else)
+
+    cond_else  go to state 104
+
+
+State 83
+
+   53 comando_sem_rotulo: comando_repetitivo •
+
+    $default  reduce using rule 53 (comando_sem_rotulo)
+
+
+State 84
+
+   54 comando_sem_rotulo: desvios •
+
+    $default  reduce using rule 54 (comando_sem_rotulo)
+
+
+State 85
+
+   13 declara_var: $@5 lista_id_var DOIS_PONTOS tipo $@6 • PONTO_E_VIRGULA
+
+    PONTO_E_VIRGULA  shift, and go to state 105
+
+
+State 86
 
    34 parte_param_formais: ABRE_PARENTESES parametros FECHA_PARENTESES •
 
     $default  reduce using rule 34 (parte_param_formais)
 
 
-State 82
+State 87
 
    40 secao_param_formais: var_ou_nada $@14 • lista_idents DOIS_PONTOS tipo
 
     IDENT  shift, and go to state 7
 
-    lista_idents  go to state 118
+    lista_idents  go to state 106
     ident_params  go to state 9
 
 
-State 83
+State 88
 
    35 parametros: secao_param_formais PONTO_E_VIRGULA • secao_param_formais
 
@@ -1231,830 +1285,960 @@ State 83
     $default  reduce using rule 38 (var_ou_nada)
 
     var_ou_nada          go to state 62
-    secao_param_formais  go to state 119
+    secao_param_formais  go to state 107
 
 
-State 84
+State 89
 
    31 declara_funcao: FUNCTION IDENT $@10 parte_param_formais $@11 DOIS_PONTOS • tipo $@12 PONTO_E_VIRGULA bloco $@13 PONTO_E_VIRGULA
 
     TIPO  shift, and go to state 58
 
-    tipo  go to state 120
-
-
-State 85
-
-   26 declara_procedimento: PROCEDURE IDENT $@7 param_formais_ou_nada $@8 • PONTO_E_VIRGULA bloco $@9 PONTO_E_VIRGULA
-
-    PONTO_E_VIRGULA  shift, and go to state 121
-
-
-State 86
-
-   67 atribuicao_continua: ATRIBUICAO • $@20 expressao
-
-    $default  reduce using rule 66 ($@20)
-
-    $@20  go to state 122
-
-
-State 87
-
-   65 atribuicao_ou_procedimento: IDENT $@19 atribuicao_continua •
-
-    $default  reduce using rule 65 (atribuicao_ou_procedimento)
-
-
-State 88
-
-   68 atribuicao_continua: chamada_de_procedimento •
-
-    $default  reduce using rule 68 (atribuicao_continua)
-
-
-State 89
-
-   72 chamada_de_procedimento: $@21 • ABRE_PARENTESES $@22 lista_expressoes FECHA_PARENTESES
-
-    ABRE_PARENTESES  shift, and go to state 123
+    tipo  go to state 108
 
 
 State 90
 
-   69 atribuicao_continua: procedimento_sem_parametros •
+   26 declara_procedimento: PROCEDURE IDENT $@7 param_formais_ou_nada $@8 • PONTO_E_VIRGULA bloco $@9 PONTO_E_VIRGULA
 
-    $default  reduce using rule 69 (atribuicao_continua)
+    PONTO_E_VIRGULA  shift, and go to state 109
 
 
 State 91
 
-   76 if_then: IF expressao $@23 • THEN comando_sem_rotulo
+  125 label: NUMERO $@29 DOIS_PONTOS •
 
-    THEN  shift, and go to state 124
+    $default  reduce using rule 125 (label)
 
 
 State 92
 
-   88 relacao: IGUAL •
+   43 comandos: comandos $@15 PONTO_E_VIRGULA • comando
 
-    $default  reduce using rule 88 (relacao)
+    NUMERO  shift, and go to state 52
+
+    $default  reduce using rule 46 (label_ou_nada)
+
+    label_ou_nada  go to state 54
+    comando        go to state 110
+    label          go to state 56
 
 
 State 93
 
-   90 relacao: MENOR •
+   67 atribuicao_ou_procedimento: IDENT $@18 • atribuicao_continua
 
-    $default  reduce using rule 90 (relacao)
+    ATRIBUICAO  shift, and go to state 111
+
+    ABRE_PARENTESES  reduce using rule 72 ($@20)
+    $default         reduce using rule 75 (procedimento_sem_parametros)
+
+    atribuicao_continua          go to state 112
+    chamada_de_procedimento      go to state 113
+    $@20                         go to state 114
+    procedimento_sem_parametros  go to state 115
 
 
 State 94
 
-   91 relacao: MENOR_IGUAL •
+   99 mais_menos_ou_nada: MENOS •
 
-    $default  reduce using rule 91 (relacao)
+    $default  reduce using rule 99 (mais_menos_ou_nada)
 
 
 State 95
 
-   92 relacao: MAIOR •
+   98 mais_menos_ou_nada: MAIS •
 
-    $default  reduce using rule 92 (relacao)
+    $default  reduce using rule 98 (mais_menos_ou_nada)
 
 
 State 96
 
-   93 relacao: MAIOR_IGUAL •
+   78 if_then: IF expressao • $@22 THEN comando_sem_rotulo
 
-    $default  reduce using rule 93 (relacao)
+    $default  reduce using rule 77 ($@22)
+
+    $@22  go to state 116
 
 
 State 97
 
-   89 relacao: DIFERENTE •
+   88 expressao: expressao_simples •
+   89          | expressao_simples • relacao expressao_simples
+   96 expressao_simples: expressao_simples • mais_menos_or termo
 
-    $default  reduce using rule 89 (relacao)
+    IGUAL        shift, and go to state 117
+    MENOR        shift, and go to state 118
+    MENOR_IGUAL  shift, and go to state 119
+    MAIOR        shift, and go to state 120
+    MAIOR_IGUAL  shift, and go to state 121
+    DIFERENTE    shift, and go to state 122
+    OR           shift, and go to state 123
+    MENOS        shift, and go to state 124
+    MAIS         shift, and go to state 125
+
+    $default  reduce using rule 88 (expressao)
+
+    relacao        go to state 126
+    mais_menos_or  go to state 127
 
 
 State 98
 
-  101 mais_menos_or: OR •
+   97 expressao_simples: mais_menos_ou_nada • termo
 
-    $default  reduce using rule 101 (mais_menos_or)
+    ABRE_PARENTESES  shift, and go to state 128
+    IDENT            shift, and go to state 129
+    NOT              shift, and go to state 130
+    NUMERO           shift, and go to state 131
+    VALOR_BOOL       shift, and go to state 132
+
+    termo  go to state 133
+    fator  go to state 134
 
 
 State 99
 
-  100 mais_menos_or: MENOS •
+   84 comando_repetitivo: WHILE $@24 • expressao $@25 DO comando_sem_rotulo
 
-    $default  reduce using rule 100 (mais_menos_or)
+    MENOS  shift, and go to state 94
+    MAIS   shift, and go to state 95
+
+    $default  reduce using rule 100 (mais_menos_ou_nada)
+
+    expressao           go to state 135
+    expressao_simples   go to state 97
+    mais_menos_ou_nada  go to state 98
 
 
 State 100
 
-   99 mais_menos_or: MAIS •
+   56 leitura: READ ABRE_PARENTESES • leitura_itens FECHA_PARENTESES
 
-    $default  reduce using rule 99 (mais_menos_or)
+    IDENT  shift, and go to state 136
+
+    leitura_itens  go to state 137
+    item_leitura   go to state 138
 
 
 State 101
 
-   87 expressao: expressao_simples relacao • expressao_simples
+   62 escrita: WRITE ABRE_PARENTESES • $@16 escrita_itens $@17 FECHA_PARENTESES
 
-    MENOS  shift, and go to state 68
-    MAIS   shift, and go to state 69
+    $default  reduce using rule 60 ($@16)
 
-    $default  reduce using rule 98 (mais_menos_ou_nada)
-
-    expressao_simples   go to state 125
-    mais_menos_ou_nada  go to state 72
+    $@16  go to state 139
 
 
 State 102
 
-   94 expressao_simples: expressao_simples mais_menos_or • termo
+  126 desvios: GOTO NUMERO •
 
-    ABRE_PARENTESES  shift, and go to state 103
-    IDENT            shift, and go to state 104
-    NOT              shift, and go to state 105
-    NUMERO           shift, and go to state 106
-    VALOR_BOOL       shift, and go to state 107
-
-    termo  go to state 126
-    fator  go to state 109
+    $default  reduce using rule 126 (desvios)
 
 
 State 103
 
-  113 fator: ABRE_PARENTESES • expressao FECHA_PARENTESES
+   80 cond_else: ELSE • $@23 comando_sem_rotulo
 
-    MENOS  shift, and go to state 68
-    MAIS   shift, and go to state 69
+    $default  reduce using rule 79 ($@23)
 
-    $default  reduce using rule 98 (mais_menos_ou_nada)
-
-    expressao           go to state 127
-    expressao_simples   go to state 71
-    mais_menos_ou_nada  go to state 72
+    $@23  go to state 140
 
 
 State 104
 
-  110 fator: IDENT • $@28 procedimento_ou_nada
+   76 comando_condicional: if_then cond_else •
 
-    $default  reduce using rule 109 ($@28)
-
-    $@28  go to state 128
+    $default  reduce using rule 76 (comando_condicional)
 
 
 State 105
-
-  114 fator: NOT • fator
-
-    ABRE_PARENTESES  shift, and go to state 103
-    IDENT            shift, and go to state 104
-    NOT              shift, and go to state 105
-    NUMERO           shift, and go to state 106
-    VALOR_BOOL       shift, and go to state 107
-
-    fator  go to state 129
-
-
-State 106
-
-  111 fator: NUMERO •
-
-    $default  reduce using rule 111 (fator)
-
-
-State 107
-
-  112 fator: VALOR_BOOL •
-
-    $default  reduce using rule 112 (fator)
-
-
-State 108
-
-   95 expressao_simples: mais_menos_ou_nada termo •
-  102 termo: termo • vezes_div_and fator
-
-    AND    shift, and go to state 130
-    DIV    shift, and go to state 131
-    VEZES  shift, and go to state 132
-
-    $default  reduce using rule 95 (expressao_simples)
-
-    vezes_div_and  go to state 133
-
-
-State 109
-
-  103 termo: fator •
-
-    $default  reduce using rule 103 (termo)
-
-
-State 110
-
-   82 comando_repetitivo: WHILE $@25 expressao • $@26 DO comando_sem_rotulo
-
-    $default  reduce using rule 81 ($@26)
-
-    $@26  go to state 134
-
-
-State 111
-
-   56 item_leitura: IDENT •
-
-    $default  reduce using rule 56 (item_leitura)
-
-
-State 112
-
-   53 leitura: READ ABRE_PARENTESES leitura_itens • FECHA_PARENTESES
-   54 leitura_itens: leitura_itens • VIRGULA item_leitura
-
-    FECHA_PARENTESES  shift, and go to state 135
-    VIRGULA           shift, and go to state 136
-
-
-State 113
-
-   55 leitura_itens: item_leitura •
-
-    $default  reduce using rule 55 (leitura_itens)
-
-
-State 114
-
-   59 escrita: WRITE ABRE_PARENTESES $@16 • escrita_itens $@17 FECHA_PARENTESES
-
-    $default  reduce using rule 62 ($@18)
-
-    escrita_itens  go to state 137
-    item_escrita   go to state 138
-    $@18           go to state 139
-
-
-State 115
-
-   43 comandos: comandos $@15 PONTO_E_VIRGULA • comando
-
-    T_BEGIN  shift, and go to state 35
-    IDENT    shift, and go to state 42
-    IF       shift, and go to state 43
-    WHILE    shift, and go to state 44
-    READ     shift, and go to state 45
-    WRITE    shift, and go to state 46
-
-    $default  reduce using rule 52 (comando_sem_rotulo)
-
-    comando_composto            go to state 47
-    comando                     go to state 140
-    comando_sem_rotulo          go to state 50
-    leitura                     go to state 51
-    escrita                     go to state 52
-    atribuicao_ou_procedimento  go to state 53
-    comando_condicional         go to state 54
-    if_then                     go to state 55
-    comando_repetitivo          go to state 56
-
-
-State 116
-
-   78 cond_else: ELSE $@24 • comando_sem_rotulo
-
-    T_BEGIN  shift, and go to state 35
-    IDENT    shift, and go to state 42
-    IF       shift, and go to state 43
-    WHILE    shift, and go to state 44
-    READ     shift, and go to state 45
-    WRITE    shift, and go to state 46
-
-    $default  reduce using rule 52 (comando_sem_rotulo)
-
-    comando_composto            go to state 47
-    comando_sem_rotulo          go to state 141
-    leitura                     go to state 51
-    escrita                     go to state 52
-    atribuicao_ou_procedimento  go to state 53
-    comando_condicional         go to state 54
-    if_then                     go to state 55
-    comando_repetitivo          go to state 56
-
-
-State 117
 
    13 declara_var: $@5 lista_id_var DOIS_PONTOS tipo $@6 PONTO_E_VIRGULA •
 
     $default  reduce using rule 13 (declara_var)
 
 
-State 118
+State 106
 
    17 lista_idents: lista_idents • VIRGULA ident_params
    40 secao_param_formais: var_ou_nada $@14 lista_idents • DOIS_PONTOS tipo
 
     VIRGULA      shift, and go to state 11
-    DOIS_PONTOS  shift, and go to state 142
+    DOIS_PONTOS  shift, and go to state 141
 
 
-State 119
+State 107
 
    35 parametros: secao_param_formais PONTO_E_VIRGULA secao_param_formais •
 
     $default  reduce using rule 35 (parametros)
 
 
-State 120
+State 108
 
    31 declara_funcao: FUNCTION IDENT $@10 parte_param_formais $@11 DOIS_PONTOS tipo • $@12 PONTO_E_VIRGULA bloco $@13 PONTO_E_VIRGULA
 
     $default  reduce using rule 29 ($@12)
 
-    $@12  go to state 143
+    $@12  go to state 142
 
 
-State 121
+State 109
 
    26 declara_procedimento: PROCEDURE IDENT $@7 param_formais_ou_nada $@8 PONTO_E_VIRGULA • bloco $@9 PONTO_E_VIRGULA
 
-    VAR       reduce using rule 6 ($@4)
-    $default  reduce using rule 8 (parte_declara_vars)
+    LABEL  shift, and go to state 14
 
-    bloco               go to state 144
-    parte_declara_vars  go to state 15
-    $@4                 go to state 16
+    $default  reduce using rule 118 (parte_declara_rotulos)
 
+    bloco                  go to state 143
+    parte_declara_rotulos  go to state 16
+    declara_labels         go to state 17
 
-State 122
 
-   67 atribuicao_continua: ATRIBUICAO $@20 • expressao
-
-    MENOS  shift, and go to state 68
-    MAIS   shift, and go to state 69
-
-    $default  reduce using rule 98 (mais_menos_ou_nada)
-
-    expressao           go to state 145
-    expressao_simples   go to state 71
-    mais_menos_ou_nada  go to state 72
-
-
-State 123
-
-   72 chamada_de_procedimento: $@21 ABRE_PARENTESES • $@22 lista_expressoes FECHA_PARENTESES
-
-    $default  reduce using rule 71 ($@22)
-
-    $@22  go to state 146
-
-
-State 124
-
-   76 if_then: IF expressao $@23 THEN • comando_sem_rotulo
-
-    T_BEGIN  shift, and go to state 35
-    IDENT    shift, and go to state 42
-    IF       shift, and go to state 43
-    WHILE    shift, and go to state 44
-    READ     shift, and go to state 45
-    WRITE    shift, and go to state 46
-
-    $default  reduce using rule 52 (comando_sem_rotulo)
-
-    comando_composto            go to state 47
-    comando_sem_rotulo          go to state 147
-    leitura                     go to state 51
-    escrita                     go to state 52
-    atribuicao_ou_procedimento  go to state 53
-    comando_condicional         go to state 54
-    if_then                     go to state 55
-    comando_repetitivo          go to state 56
-
-
-State 125
-
-   87 expressao: expressao_simples relacao expressao_simples •
-   94 expressao_simples: expressao_simples • mais_menos_or termo
-
-    OR     shift, and go to state 98
-    MENOS  shift, and go to state 99
-    MAIS   shift, and go to state 100
-
-    $default  reduce using rule 87 (expressao)
-
-    mais_menos_or  go to state 102
-
-
-State 126
-
-   94 expressao_simples: expressao_simples mais_menos_or termo •
-  102 termo: termo • vezes_div_and fator
-
-    AND    shift, and go to state 130
-    DIV    shift, and go to state 131
-    VEZES  shift, and go to state 132
-
-    $default  reduce using rule 94 (expressao_simples)
-
-    vezes_div_and  go to state 133
-
-
-State 127
-
-  113 fator: ABRE_PARENTESES expressao • FECHA_PARENTESES
-
-    FECHA_PARENTESES  shift, and go to state 148
-
-
-State 128
-
-  110 fator: IDENT $@28 • procedimento_ou_nada
-
-    ABRE_PARENTESES  reduce using rule 70 ($@21)
-    $default         reduce using rule 108 (procedimento_ou_nada)
-
-    chamada_de_procedimento  go to state 149
-    $@21                     go to state 89
-    procedimento_ou_nada     go to state 150
-
-
-State 129
-
-  114 fator: NOT fator •
-
-    $default  reduce using rule 114 (fator)
-
-
-State 130
-
-  106 vezes_div_and: AND •
-
-    $default  reduce using rule 106 (vezes_div_and)
-
-
-State 131
-
-  105 vezes_div_and: DIV •
-
-    $default  reduce using rule 105 (vezes_div_and)
-
-
-State 132
-
-  104 vezes_div_and: VEZES •
-
-    $default  reduce using rule 104 (vezes_div_and)
-
-
-State 133
-
-  102 termo: termo vezes_div_and • fator
-
-    ABRE_PARENTESES  shift, and go to state 103
-    IDENT            shift, and go to state 104
-    NOT              shift, and go to state 105
-    NUMERO           shift, and go to state 106
-    VALOR_BOOL       shift, and go to state 107
-
-    fator  go to state 151
-
-
-State 134
-
-   82 comando_repetitivo: WHILE $@25 expressao $@26 • DO comando_sem_rotulo
-
-    DO  shift, and go to state 152
-
-
-State 135
-
-   53 leitura: READ ABRE_PARENTESES leitura_itens FECHA_PARENTESES •
-
-    $default  reduce using rule 53 (leitura)
-
-
-State 136
-
-   54 leitura_itens: leitura_itens VIRGULA • item_leitura
-
-    IDENT  shift, and go to state 111
-
-    item_leitura  go to state 153
-
-
-State 137
-
-   59 escrita: WRITE ABRE_PARENTESES $@16 escrita_itens • $@17 FECHA_PARENTESES
-   60 escrita_itens: escrita_itens • VIRGULA item_escrita
-
-    VIRGULA  shift, and go to state 154
-
-    $default  reduce using rule 58 ($@17)
-
-    $@17  go to state 155
-
-
-State 138
-
-   61 escrita_itens: item_escrita •
-
-    $default  reduce using rule 61 (escrita_itens)
-
-
-State 139
-
-   63 item_escrita: $@18 • expressao
-
-    MENOS  shift, and go to state 68
-    MAIS   shift, and go to state 69
-
-    $default  reduce using rule 98 (mais_menos_ou_nada)
-
-    expressao           go to state 156
-    expressao_simples   go to state 71
-    mais_menos_ou_nada  go to state 72
-
-
-State 140
+State 110
 
    43 comandos: comandos $@15 PONTO_E_VIRGULA comando •
 
     $default  reduce using rule 43 (comandos)
 
 
+State 111
+
+   69 atribuicao_continua: ATRIBUICAO • $@19 expressao
+
+    $default  reduce using rule 68 ($@19)
+
+    $@19  go to state 144
+
+
+State 112
+
+   67 atribuicao_ou_procedimento: IDENT $@18 atribuicao_continua •
+
+    $default  reduce using rule 67 (atribuicao_ou_procedimento)
+
+
+State 113
+
+   70 atribuicao_continua: chamada_de_procedimento •
+
+    $default  reduce using rule 70 (atribuicao_continua)
+
+
+State 114
+
+   74 chamada_de_procedimento: $@20 • ABRE_PARENTESES $@21 lista_expressoes FECHA_PARENTESES
+
+    ABRE_PARENTESES  shift, and go to state 145
+
+
+State 115
+
+   71 atribuicao_continua: procedimento_sem_parametros •
+
+    $default  reduce using rule 71 (atribuicao_continua)
+
+
+State 116
+
+   78 if_then: IF expressao $@22 • THEN comando_sem_rotulo
+
+    THEN  shift, and go to state 146
+
+
+State 117
+
+   90 relacao: IGUAL •
+
+    $default  reduce using rule 90 (relacao)
+
+
+State 118
+
+   92 relacao: MENOR •
+
+    $default  reduce using rule 92 (relacao)
+
+
+State 119
+
+   93 relacao: MENOR_IGUAL •
+
+    $default  reduce using rule 93 (relacao)
+
+
+State 120
+
+   94 relacao: MAIOR •
+
+    $default  reduce using rule 94 (relacao)
+
+
+State 121
+
+   95 relacao: MAIOR_IGUAL •
+
+    $default  reduce using rule 95 (relacao)
+
+
+State 122
+
+   91 relacao: DIFERENTE •
+
+    $default  reduce using rule 91 (relacao)
+
+
+State 123
+
+  103 mais_menos_or: OR •
+
+    $default  reduce using rule 103 (mais_menos_or)
+
+
+State 124
+
+  102 mais_menos_or: MENOS •
+
+    $default  reduce using rule 102 (mais_menos_or)
+
+
+State 125
+
+  101 mais_menos_or: MAIS •
+
+    $default  reduce using rule 101 (mais_menos_or)
+
+
+State 126
+
+   89 expressao: expressao_simples relacao • expressao_simples
+
+    MENOS  shift, and go to state 94
+    MAIS   shift, and go to state 95
+
+    $default  reduce using rule 100 (mais_menos_ou_nada)
+
+    expressao_simples   go to state 147
+    mais_menos_ou_nada  go to state 98
+
+
+State 127
+
+   96 expressao_simples: expressao_simples mais_menos_or • termo
+
+    ABRE_PARENTESES  shift, and go to state 128
+    IDENT            shift, and go to state 129
+    NOT              shift, and go to state 130
+    NUMERO           shift, and go to state 131
+    VALOR_BOOL       shift, and go to state 132
+
+    termo  go to state 148
+    fator  go to state 134
+
+
+State 128
+
+  115 fator: ABRE_PARENTESES • expressao FECHA_PARENTESES
+
+    MENOS  shift, and go to state 94
+    MAIS   shift, and go to state 95
+
+    $default  reduce using rule 100 (mais_menos_ou_nada)
+
+    expressao           go to state 149
+    expressao_simples   go to state 97
+    mais_menos_ou_nada  go to state 98
+
+
+State 129
+
+  112 fator: IDENT • $@27 procedimento_ou_nada
+
+    $default  reduce using rule 111 ($@27)
+
+    $@27  go to state 150
+
+
+State 130
+
+  116 fator: NOT • fator
+
+    ABRE_PARENTESES  shift, and go to state 128
+    IDENT            shift, and go to state 129
+    NOT              shift, and go to state 130
+    NUMERO           shift, and go to state 131
+    VALOR_BOOL       shift, and go to state 132
+
+    fator  go to state 151
+
+
+State 131
+
+  113 fator: NUMERO •
+
+    $default  reduce using rule 113 (fator)
+
+
+State 132
+
+  114 fator: VALOR_BOOL •
+
+    $default  reduce using rule 114 (fator)
+
+
+State 133
+
+   97 expressao_simples: mais_menos_ou_nada termo •
+  104 termo: termo • vezes_div_and fator
+
+    AND    shift, and go to state 152
+    DIV    shift, and go to state 153
+    VEZES  shift, and go to state 154
+
+    $default  reduce using rule 97 (expressao_simples)
+
+    vezes_div_and  go to state 155
+
+
+State 134
+
+  105 termo: fator •
+
+    $default  reduce using rule 105 (termo)
+
+
+State 135
+
+   84 comando_repetitivo: WHILE $@24 expressao • $@25 DO comando_sem_rotulo
+
+    $default  reduce using rule 83 ($@25)
+
+    $@25  go to state 156
+
+
+State 136
+
+   59 item_leitura: IDENT •
+
+    $default  reduce using rule 59 (item_leitura)
+
+
+State 137
+
+   56 leitura: READ ABRE_PARENTESES leitura_itens • FECHA_PARENTESES
+   57 leitura_itens: leitura_itens • VIRGULA item_leitura
+
+    FECHA_PARENTESES  shift, and go to state 157
+    VIRGULA           shift, and go to state 158
+
+
+State 138
+
+   58 leitura_itens: item_leitura •
+
+    $default  reduce using rule 58 (leitura_itens)
+
+
+State 139
+
+   62 escrita: WRITE ABRE_PARENTESES $@16 • escrita_itens $@17 FECHA_PARENTESES
+
+    MENOS  shift, and go to state 94
+    MAIS   shift, and go to state 95
+
+    $default  reduce using rule 100 (mais_menos_ou_nada)
+
+    escrita_itens       go to state 159
+    item_escrita        go to state 160
+    expressao           go to state 161
+    expressao_simples   go to state 97
+    mais_menos_ou_nada  go to state 98
+
+
+State 140
+
+   80 cond_else: ELSE $@23 • comando_sem_rotulo
+
+    T_BEGIN  shift, and go to state 45
+    IDENT    shift, and go to state 70
+    IF       shift, and go to state 71
+    WHILE    shift, and go to state 72
+    READ     shift, and go to state 73
+    WRITE    shift, and go to state 74
+    GOTO     shift, and go to state 75
+
+    $default  reduce using rule 55 (comando_sem_rotulo)
+
+    comando_composto            go to state 76
+    comando_sem_rotulo          go to state 162
+    leitura                     go to state 78
+    escrita                     go to state 79
+    atribuicao_ou_procedimento  go to state 80
+    comando_condicional         go to state 81
+    if_then                     go to state 82
+    comando_repetitivo          go to state 83
+    desvios                     go to state 84
+
+
 State 141
-
-   78 cond_else: ELSE $@24 comando_sem_rotulo •
-
-    $default  reduce using rule 78 (cond_else)
-
-
-State 142
 
    40 secao_param_formais: var_ou_nada $@14 lista_idents DOIS_PONTOS • tipo
 
     TIPO  shift, and go to state 58
 
-    tipo  go to state 157
+    tipo  go to state 163
 
 
-State 143
+State 142
 
    31 declara_funcao: FUNCTION IDENT $@10 parte_param_formais $@11 DOIS_PONTOS tipo $@12 • PONTO_E_VIRGULA bloco $@13 PONTO_E_VIRGULA
 
-    PONTO_E_VIRGULA  shift, and go to state 158
+    PONTO_E_VIRGULA  shift, and go to state 164
 
 
-State 144
+State 143
 
    26 declara_procedimento: PROCEDURE IDENT $@7 param_formais_ou_nada $@8 PONTO_E_VIRGULA bloco • $@9 PONTO_E_VIRGULA
 
     $default  reduce using rule 25 ($@9)
 
-    $@9  go to state 159
+    $@9  go to state 165
+
+
+State 144
+
+   69 atribuicao_continua: ATRIBUICAO $@19 • expressao
+
+    MENOS  shift, and go to state 94
+    MAIS   shift, and go to state 95
+
+    $default  reduce using rule 100 (mais_menos_ou_nada)
+
+    expressao           go to state 166
+    expressao_simples   go to state 97
+    mais_menos_ou_nada  go to state 98
 
 
 State 145
 
-   67 atribuicao_continua: ATRIBUICAO $@20 expressao •
+   74 chamada_de_procedimento: $@20 ABRE_PARENTESES • $@21 lista_expressoes FECHA_PARENTESES
 
-    $default  reduce using rule 67 (atribuicao_continua)
+    $default  reduce using rule 73 ($@21)
+
+    $@21  go to state 167
 
 
 State 146
 
-   72 chamada_de_procedimento: $@21 ABRE_PARENTESES $@22 • lista_expressoes FECHA_PARENTESES
+   78 if_then: IF expressao $@22 THEN • comando_sem_rotulo
 
-    MENOS  shift, and go to state 68
-    MAIS   shift, and go to state 69
+    T_BEGIN  shift, and go to state 45
+    IDENT    shift, and go to state 70
+    IF       shift, and go to state 71
+    WHILE    shift, and go to state 72
+    READ     shift, and go to state 73
+    WRITE    shift, and go to state 74
+    GOTO     shift, and go to state 75
 
-    $default  reduce using rule 98 (mais_menos_ou_nada)
+    $default  reduce using rule 55 (comando_sem_rotulo)
 
-    lista_expressoes    go to state 160
-    expressao           go to state 161
-    expressao_simples   go to state 71
-    mais_menos_ou_nada  go to state 72
+    comando_composto            go to state 76
+    comando_sem_rotulo          go to state 168
+    leitura                     go to state 78
+    escrita                     go to state 79
+    atribuicao_ou_procedimento  go to state 80
+    comando_condicional         go to state 81
+    if_then                     go to state 82
+    comando_repetitivo          go to state 83
+    desvios                     go to state 84
 
 
 State 147
 
-   76 if_then: IF expressao $@23 THEN comando_sem_rotulo •
+   89 expressao: expressao_simples relacao expressao_simples •
+   96 expressao_simples: expressao_simples • mais_menos_or termo
 
-    $default  reduce using rule 76 (if_then)
+    OR     shift, and go to state 123
+    MENOS  shift, and go to state 124
+    MAIS   shift, and go to state 125
+
+    $default  reduce using rule 89 (expressao)
+
+    mais_menos_or  go to state 127
 
 
 State 148
 
-  113 fator: ABRE_PARENTESES expressao FECHA_PARENTESES •
+   96 expressao_simples: expressao_simples mais_menos_or termo •
+  104 termo: termo • vezes_div_and fator
 
-    $default  reduce using rule 113 (fator)
+    AND    shift, and go to state 152
+    DIV    shift, and go to state 153
+    VEZES  shift, and go to state 154
+
+    $default  reduce using rule 96 (expressao_simples)
+
+    vezes_div_and  go to state 155
 
 
 State 149
 
-  107 procedimento_ou_nada: chamada_de_procedimento •
+  115 fator: ABRE_PARENTESES expressao • FECHA_PARENTESES
 
-    $default  reduce using rule 107 (procedimento_ou_nada)
+    FECHA_PARENTESES  shift, and go to state 169
 
 
 State 150
 
-  110 fator: IDENT $@28 procedimento_ou_nada •
+  112 fator: IDENT $@27 • procedimento_ou_nada
 
-    $default  reduce using rule 110 (fator)
+    ABRE_PARENTESES  reduce using rule 72 ($@20)
+    $default         reduce using rule 110 (procedimento_ou_nada)
+
+    chamada_de_procedimento  go to state 170
+    $@20                     go to state 114
+    procedimento_ou_nada     go to state 171
 
 
 State 151
 
-  102 termo: termo vezes_div_and fator •
+  116 fator: NOT fator •
 
-    $default  reduce using rule 102 (termo)
+    $default  reduce using rule 116 (fator)
 
 
 State 152
 
-   82 comando_repetitivo: WHILE $@25 expressao $@26 DO • comando_sem_rotulo
+  108 vezes_div_and: AND •
 
-    T_BEGIN  shift, and go to state 35
-    IDENT    shift, and go to state 42
-    IF       shift, and go to state 43
-    WHILE    shift, and go to state 44
-    READ     shift, and go to state 45
-    WRITE    shift, and go to state 46
-
-    $default  reduce using rule 52 (comando_sem_rotulo)
-
-    comando_composto            go to state 47
-    comando_sem_rotulo          go to state 162
-    leitura                     go to state 51
-    escrita                     go to state 52
-    atribuicao_ou_procedimento  go to state 53
-    comando_condicional         go to state 54
-    if_then                     go to state 55
-    comando_repetitivo          go to state 56
+    $default  reduce using rule 108 (vezes_div_and)
 
 
 State 153
 
-   54 leitura_itens: leitura_itens VIRGULA item_leitura •
+  107 vezes_div_and: DIV •
 
-    $default  reduce using rule 54 (leitura_itens)
+    $default  reduce using rule 107 (vezes_div_and)
 
 
 State 154
 
-   60 escrita_itens: escrita_itens VIRGULA • item_escrita
+  106 vezes_div_and: VEZES •
 
-    $default  reduce using rule 62 ($@18)
-
-    item_escrita  go to state 163
-    $@18          go to state 139
+    $default  reduce using rule 106 (vezes_div_and)
 
 
 State 155
 
-   59 escrita: WRITE ABRE_PARENTESES $@16 escrita_itens $@17 • FECHA_PARENTESES
+  104 termo: termo vezes_div_and • fator
 
-    FECHA_PARENTESES  shift, and go to state 164
+    ABRE_PARENTESES  shift, and go to state 128
+    IDENT            shift, and go to state 129
+    NOT              shift, and go to state 130
+    NUMERO           shift, and go to state 131
+    VALOR_BOOL       shift, and go to state 132
+
+    fator  go to state 172
 
 
 State 156
 
-   63 item_escrita: $@18 expressao •
+   84 comando_repetitivo: WHILE $@24 expressao $@25 • DO comando_sem_rotulo
 
-    $default  reduce using rule 63 (item_escrita)
+    DO  shift, and go to state 173
 
 
 State 157
+
+   56 leitura: READ ABRE_PARENTESES leitura_itens FECHA_PARENTESES •
+
+    $default  reduce using rule 56 (leitura)
+
+
+State 158
+
+   57 leitura_itens: leitura_itens VIRGULA • item_leitura
+
+    IDENT  shift, and go to state 136
+
+    item_leitura  go to state 174
+
+
+State 159
+
+   62 escrita: WRITE ABRE_PARENTESES $@16 escrita_itens • $@17 FECHA_PARENTESES
+   63 escrita_itens: escrita_itens • VIRGULA item_escrita
+
+    VIRGULA  shift, and go to state 175
+
+    $default  reduce using rule 61 ($@17)
+
+    $@17  go to state 176
+
+
+State 160
+
+   64 escrita_itens: item_escrita •
+
+    $default  reduce using rule 64 (escrita_itens)
+
+
+State 161
+
+   65 item_escrita: expressao •
+
+    $default  reduce using rule 65 (item_escrita)
+
+
+State 162
+
+   80 cond_else: ELSE $@23 comando_sem_rotulo •
+
+    $default  reduce using rule 80 (cond_else)
+
+
+State 163
 
    40 secao_param_formais: var_ou_nada $@14 lista_idents DOIS_PONTOS tipo •
 
     $default  reduce using rule 40 (secao_param_formais)
 
 
-State 158
+State 164
 
    31 declara_funcao: FUNCTION IDENT $@10 parte_param_formais $@11 DOIS_PONTOS tipo $@12 PONTO_E_VIRGULA • bloco $@13 PONTO_E_VIRGULA
 
-    VAR       reduce using rule 6 ($@4)
-    $default  reduce using rule 8 (parte_declara_vars)
+    LABEL  shift, and go to state 14
 
-    bloco               go to state 165
-    parte_declara_vars  go to state 15
-    $@4                 go to state 16
+    $default  reduce using rule 118 (parte_declara_rotulos)
 
-
-State 159
-
-   26 declara_procedimento: PROCEDURE IDENT $@7 param_formais_ou_nada $@8 PONTO_E_VIRGULA bloco $@9 • PONTO_E_VIRGULA
-
-    PONTO_E_VIRGULA  shift, and go to state 166
-
-
-State 160
-
-   72 chamada_de_procedimento: $@21 ABRE_PARENTESES $@22 lista_expressoes • FECHA_PARENTESES
-
-    FECHA_PARENTESES  shift, and go to state 167
-
-
-State 161
-
-   84 lista_expressoes: expressao • $@27 VIRGULA lista_expressoes
-   85                 | expressao •
-
-    FECHA_PARENTESES  reduce using rule 85 (lista_expressoes)
-    $default          reduce using rule 83 ($@27)
-
-    $@27  go to state 168
-
-
-State 162
-
-   82 comando_repetitivo: WHILE $@25 expressao $@26 DO comando_sem_rotulo •
-
-    $default  reduce using rule 82 (comando_repetitivo)
-
-
-State 163
-
-   60 escrita_itens: escrita_itens VIRGULA item_escrita •
-
-    $default  reduce using rule 60 (escrita_itens)
-
-
-State 164
-
-   59 escrita: WRITE ABRE_PARENTESES $@16 escrita_itens $@17 FECHA_PARENTESES •
-
-    $default  reduce using rule 59 (escrita)
+    bloco                  go to state 177
+    parte_declara_rotulos  go to state 16
+    declara_labels         go to state 17
 
 
 State 165
+
+   26 declara_procedimento: PROCEDURE IDENT $@7 param_formais_ou_nada $@8 PONTO_E_VIRGULA bloco $@9 • PONTO_E_VIRGULA
+
+    PONTO_E_VIRGULA  shift, and go to state 178
+
+
+State 166
+
+   69 atribuicao_continua: ATRIBUICAO $@19 expressao •
+
+    $default  reduce using rule 69 (atribuicao_continua)
+
+
+State 167
+
+   74 chamada_de_procedimento: $@20 ABRE_PARENTESES $@21 • lista_expressoes FECHA_PARENTESES
+
+    MENOS  shift, and go to state 94
+    MAIS   shift, and go to state 95
+
+    $default  reduce using rule 100 (mais_menos_ou_nada)
+
+    lista_expressoes    go to state 179
+    expressao           go to state 180
+    expressao_simples   go to state 97
+    mais_menos_ou_nada  go to state 98
+
+
+State 168
+
+   78 if_then: IF expressao $@22 THEN comando_sem_rotulo •
+
+    $default  reduce using rule 78 (if_then)
+
+
+State 169
+
+  115 fator: ABRE_PARENTESES expressao FECHA_PARENTESES •
+
+    $default  reduce using rule 115 (fator)
+
+
+State 170
+
+  109 procedimento_ou_nada: chamada_de_procedimento •
+
+    $default  reduce using rule 109 (procedimento_ou_nada)
+
+
+State 171
+
+  112 fator: IDENT $@27 procedimento_ou_nada •
+
+    $default  reduce using rule 112 (fator)
+
+
+State 172
+
+  104 termo: termo vezes_div_and fator •
+
+    $default  reduce using rule 104 (termo)
+
+
+State 173
+
+   84 comando_repetitivo: WHILE $@24 expressao $@25 DO • comando_sem_rotulo
+
+    T_BEGIN  shift, and go to state 45
+    IDENT    shift, and go to state 70
+    IF       shift, and go to state 71
+    WHILE    shift, and go to state 72
+    READ     shift, and go to state 73
+    WRITE    shift, and go to state 74
+    GOTO     shift, and go to state 75
+
+    $default  reduce using rule 55 (comando_sem_rotulo)
+
+    comando_composto            go to state 76
+    comando_sem_rotulo          go to state 181
+    leitura                     go to state 78
+    escrita                     go to state 79
+    atribuicao_ou_procedimento  go to state 80
+    comando_condicional         go to state 81
+    if_then                     go to state 82
+    comando_repetitivo          go to state 83
+    desvios                     go to state 84
+
+
+State 174
+
+   57 leitura_itens: leitura_itens VIRGULA item_leitura •
+
+    $default  reduce using rule 57 (leitura_itens)
+
+
+State 175
+
+   63 escrita_itens: escrita_itens VIRGULA • item_escrita
+
+    MENOS  shift, and go to state 94
+    MAIS   shift, and go to state 95
+
+    $default  reduce using rule 100 (mais_menos_ou_nada)
+
+    item_escrita        go to state 182
+    expressao           go to state 161
+    expressao_simples   go to state 97
+    mais_menos_ou_nada  go to state 98
+
+
+State 176
+
+   62 escrita: WRITE ABRE_PARENTESES $@16 escrita_itens $@17 • FECHA_PARENTESES
+
+    FECHA_PARENTESES  shift, and go to state 183
+
+
+State 177
 
    31 declara_funcao: FUNCTION IDENT $@10 parte_param_formais $@11 DOIS_PONTOS tipo $@12 PONTO_E_VIRGULA bloco • $@13 PONTO_E_VIRGULA
 
     $default  reduce using rule 30 ($@13)
 
-    $@13  go to state 169
+    $@13  go to state 184
 
 
-State 166
+State 178
 
    26 declara_procedimento: PROCEDURE IDENT $@7 param_formais_ou_nada $@8 PONTO_E_VIRGULA bloco $@9 PONTO_E_VIRGULA •
 
     $default  reduce using rule 26 (declara_procedimento)
 
 
-State 167
+State 179
 
-   72 chamada_de_procedimento: $@21 ABRE_PARENTESES $@22 lista_expressoes FECHA_PARENTESES •
+   74 chamada_de_procedimento: $@20 ABRE_PARENTESES $@21 lista_expressoes • FECHA_PARENTESES
 
-    $default  reduce using rule 72 (chamada_de_procedimento)
-
-
-State 168
-
-   84 lista_expressoes: expressao $@27 • VIRGULA lista_expressoes
-
-    VIRGULA  shift, and go to state 170
+    FECHA_PARENTESES  shift, and go to state 185
 
 
-State 169
+State 180
+
+   86 lista_expressoes: expressao • $@26 VIRGULA lista_expressoes
+   87                 | expressao •
+
+    FECHA_PARENTESES  reduce using rule 87 (lista_expressoes)
+    $default          reduce using rule 85 ($@26)
+
+    $@26  go to state 186
+
+
+State 181
+
+   84 comando_repetitivo: WHILE $@24 expressao $@25 DO comando_sem_rotulo •
+
+    $default  reduce using rule 84 (comando_repetitivo)
+
+
+State 182
+
+   63 escrita_itens: escrita_itens VIRGULA item_escrita •
+
+    $default  reduce using rule 63 (escrita_itens)
+
+
+State 183
+
+   62 escrita: WRITE ABRE_PARENTESES $@16 escrita_itens $@17 FECHA_PARENTESES •
+
+    $default  reduce using rule 62 (escrita)
+
+
+State 184
 
    31 declara_funcao: FUNCTION IDENT $@10 parte_param_formais $@11 DOIS_PONTOS tipo $@12 PONTO_E_VIRGULA bloco $@13 • PONTO_E_VIRGULA
 
-    PONTO_E_VIRGULA  shift, and go to state 171
+    PONTO_E_VIRGULA  shift, and go to state 187
 
 
-State 170
+State 185
 
-   84 lista_expressoes: expressao $@27 VIRGULA • lista_expressoes
+   74 chamada_de_procedimento: $@20 ABRE_PARENTESES $@21 lista_expressoes FECHA_PARENTESES •
 
-    MENOS  shift, and go to state 68
-    MAIS   shift, and go to state 69
-
-    $default  reduce using rule 98 (mais_menos_ou_nada)
-
-    lista_expressoes    go to state 172
-    expressao           go to state 161
-    expressao_simples   go to state 71
-    mais_menos_ou_nada  go to state 72
+    $default  reduce using rule 74 (chamada_de_procedimento)
 
 
-State 171
+State 186
+
+   86 lista_expressoes: expressao $@26 • VIRGULA lista_expressoes
+
+    VIRGULA  shift, and go to state 188
+
+
+State 187
 
    31 declara_funcao: FUNCTION IDENT $@10 parte_param_formais $@11 DOIS_PONTOS tipo $@12 PONTO_E_VIRGULA bloco $@13 PONTO_E_VIRGULA •
 
     $default  reduce using rule 31 (declara_funcao)
 
 
-State 172
+State 188
 
-   84 lista_expressoes: expressao $@27 VIRGULA lista_expressoes •
+   86 lista_expressoes: expressao $@26 VIRGULA • lista_expressoes
 
-    $default  reduce using rule 84 (lista_expressoes)
+    MENOS  shift, and go to state 94
+    MAIS   shift, and go to state 95
+
+    $default  reduce using rule 100 (mais_menos_ou_nada)
+
+    lista_expressoes    go to state 189
+    expressao           go to state 180
+    expressao_simples   go to state 97
+    mais_menos_ou_nada  go to state 98
+
+
+State 189
+
+   86 lista_expressoes: expressao $@26 VIRGULA lista_expressoes •
+
+    $default  reduce using rule 86 (lista_expressoes)

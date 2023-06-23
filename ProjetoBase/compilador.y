@@ -18,7 +18,7 @@
 TabelaSimbolos *ts, *pilhaAtribuicao;
 tipoConteudo conteudo;
 Simbolo *s_ptr, *s_var_ou_proc, proc_atual, *s_atribuicao;
-PilhaInt pilhaRotulos, pilhaAmem, pilhaProcs;
+PilhaInt pilhaRotulos, pilhaAmem, pilhaProcs, pilhaLabels;
 PilhaSimbolos pilhaVarAEsquerda;
 
 int num_vars;
@@ -26,6 +26,7 @@ int num_params;
 int num_params_section;
 int num_procedimentos_proc_atual;
 int num_param_chamada_atual;
+int num_label;
 int nivel_lexico;
 int rotulo_atual;
 int quantidade_tipo_atual;
@@ -109,6 +110,8 @@ programa:
 
 // regra 02 ====================================================================
 bloco:
+   parte_declara_rotulos
+
    parte_declara_vars
       {
          pushPilhaInt(&pilhaRotulos, rotulo_atual);
@@ -273,12 +276,16 @@ declara_procedimento:
    PONTO_E_VIRGULA bloco
    {
       removeNTabelaSimbolos(&ts, topoPilhaInt(&pilhaAmem));
+
       sprintf(mepa_comand, "RTPR %d, %d", nivel_lexico, topoPilhaInt(&pilhaAmem));
       geraCodigo(NULL, mepa_comand);
 
       popPilhaInt(&pilhaAmem);
+
+      removeNTabelaSimbolos(&ts, topoPilhaInt(&pilhaLabels));
+
       removeNTabelaSimbolos(&ts, topoPilhaInt(&pilhaProcs));
-      popPilhaInt(&pilhaProcs);
+      popPilhaInt(&pilhaProcs);      
    }
 
    PONTO_E_VIRGULA
@@ -345,6 +352,9 @@ declara_funcao:
          sprintf(mepa_comand, "RTPR %d, %d", nivel_lexico, topoPilhaInt(&pilhaAmem));
          geraCodigo(NULL, mepa_comand);
 
+         removeNTabelaSimbolos(&ts, topoPilhaInt(&pilhaLabels));
+         popPilhaInt(&pilhaLabels);
+
          popPilhaInt(&pilhaAmem);
          removeNTabelaSimbolos(&ts, topoPilhaInt(&pilhaProcs));
          popPilhaInt(&pilhaProcs);
@@ -397,7 +407,7 @@ secao_param_formais:
 ;
 
 // regra 16 ====================================================================
-comando_composto: T_BEGIN comandos T_END {imprimeTabelaSimbolos(&ts);}
+comando_composto: T_BEGIN comandos T_END 
 ;
 
 comandos: 
@@ -413,7 +423,12 @@ comandos:
 ;
 
 // regra 17 ====================================================================
-comando: comando_sem_rotulo
+label_ou_nada:
+   label
+   |
+;
+
+comando: label_ou_nada comando_sem_rotulo
 ;
 
 // regra 18 ====================================================================
@@ -424,6 +439,7 @@ comando_sem_rotulo:
    | escrita
    | comando_condicional
    | comando_repetitivo
+   | desvios
    |
 ;
 
@@ -466,12 +482,8 @@ escrita_itens:
 ;
 
 item_escrita:  
-   {
-      printf("aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa token %s \n", token);
-   }
    expressao
    {
-      printf("bBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBb token %s \n", token);
       geraCodigo(NULL, "IMPR");
    }
 ;
@@ -506,7 +518,10 @@ atribuicao_continua:
 
          s_var_ou_proc = topoPilhaSimbolos(&pilhaVarAEsquerda);
 
-         imprimeSimbolo(s_var_ou_proc);
+         if ($3 != s_var_ou_proc->conteudo.var.tipo){
+            fprintf(stderr, "COMPILATION ERROR!!! atribuicao de tipos diferentes %d %d\n", $3, s_var_ou_proc->conteudo.var.tipo);
+            exit(1);
+         }
 
          switch (s_var_ou_proc->categoria){
             case CAT_VARIAVEL:
@@ -515,7 +530,7 @@ atribuicao_continua:
             
             case CAT_PARAMETRO:
                if (s_var_ou_proc->conteudo.param.passagem == PAS_COPIA){
-                  sprintf(mepa_comand, "ARMZ %d, %d", s_var_ou_proc->nivel, s_var_ou_proc->conteudo.var.deslocamento);
+                  sprintf(mepa_comand, "ARMZ %d, %d", s_var_ou_proc->nivel, s_var_ou_proc->conteudo.param.deslocamento);
                }
                else if (s_var_ou_proc->conteudo.param.passagem == PAS_REFERENCIA){
                   sprintf(mepa_comand, "ARMI %d, %d", s_var_ou_proc->nivel, s_var_ou_proc->conteudo.param.deslocamento);
@@ -609,13 +624,17 @@ procedimento_sem_parametros:
 comando_condicional: if_then cond_else 
    {
       popPilhaInt(&pilhaRotulos);
-      rotulo_atual -= 2;
    }
 ;
 
 if_then: 
    IF expressao 
       {
+         if ( $2 != TIPO_BOOLEAN ){
+            fprintf(stderr, "COMPILATION ERROR!!! expressao nao booleana\n");
+            exit(1);
+         }
+
          sprintf(mepa_comand, "DSVF R%02d", rotulo_atual);
          geraCodigo(NULL, mepa_comand);
 
@@ -693,8 +712,11 @@ lista_expressoes:
 
 // regra 25 ====================================================================
 expressao: 
-expressao_simples { $$ = $1; }
-| expressao_simples relacao expressao_simples 
+   expressao_simples 
+      { 
+         $$ = $1;
+      }
+   | expressao_simples relacao expressao_simples 
    { 
       if ( $1 != $3 ){
          fprintf(stderr, "COMPILATION ERROR!!! Comparacao de tipos divergentes\n");
@@ -789,7 +811,6 @@ termo:
          else {
             fprintf(stderr, "COMPILATION ERROR!!!"
                " Operacao invalida para tipo integer\n");
-
          }
       }
 
@@ -817,6 +838,7 @@ procedimento_ou_nada :
          }
 
          popPilhaSimbolos(&pilhaVarAEsquerda);
+         s_var_ou_proc == NULL;
       }
    | 
       {
@@ -870,14 +892,15 @@ fator:
                         exit(1);
                      }
                   }
-                  else if ( s_var_ou_proc != NULL && s_var_ou_proc->categoria != CAT_FUNCAO)
+
+                  else if (s_var_ou_proc == NULL )
+                     sprintf(mepa_comand, "CRVL %d, %d", s_ptr->nivel, s_ptr->conteudo.var.deslocamento);
+
+                  else if ( s_var_ou_proc != NULL && s_var_ou_proc->categoria != CAT_FUNCAO )
                      sprintf(mepa_comand, "CRVL %d, %d", s_ptr->nivel, s_ptr->conteudo.var.deslocamento);
                  
                   else if (flag_atribui && (s_var_ou_proc != NULL && s_var_ou_proc->categoria == CAT_FUNCAO) && s_atribuicao->categoria != CAT_FUNCAO)
                      sprintf(mepa_comand, "CRVL %d, %d", s_ptr->nivel, s_ptr->conteudo.var.deslocamento);
-                  
-                  // else if (flag_escrevendo && (s_var_ou_proc != NULL && s_var_ou_proc->categoria == CAT_FUNCAO))
-                  //    sprintf(mepa_comand, "CRVL %d, %d", s_ptr->nivel, s_ptr->conteudo.var.deslocamento);
                   
                   else {
                      flag_imprime = 0;
@@ -950,21 +973,65 @@ fator:
 ;
 
 // regra 30 ====================================================================
-// variavel: 
-//          IDENT
-//          {
-//             Simbolo *s = buscaTabelaSimbolos(&ts, token);
-
-//             if ( s == NULL ){
-//                fprintf(stderr, "COMPILATION ERROR!!! variavel nao declarada %s\n", token);
-//                exit(1);
-//             }
-
-//             pushPilhaSimbolos(&pilhaVarAEsquerda, s);
-//          }
+parte_declara_rotulos:
+   declara_labels { pushPilhaInt(&pilhaLabels, num_label); }
+   | { pushPilhaInt(&pilhaLabels, 0); }
 ;
 
+declara_labels:
+   LABEL { num_label = 0; } lista_de_labels PONTO_E_VIRGULA
+;
 
+lista_de_labels:
+   lista_de_labels VIRGULA numero
+   | numero
+;
+
+numero: NUMERO
+   {
+      num_label++;
+
+      tipoConteudo conteudo;
+      conteudo.proc.rotulo = rotulo_atual;
+
+      Simbolo s = criaSimbolo(token, CAT_LABEL, nivel_lexico, conteudo);
+      pushTabelaSimbolos(&ts, s);
+      rotulo_atual++;
+   }
+;
+
+label:
+   NUMERO
+   {
+      s_ptr = buscaTabelaSimbolos(&ts, token);
+      
+      char aux[128];
+      char aux2[128];
+
+      sprintf(aux, "ENRT %d, %d", s_ptr->nivel, num_vars);
+      sprintf(aux2, "R%02d", s_ptr->conteudo.proc.rotulo);
+
+      geraCodigo(aux2, aux);
+   }
+   DOIS_PONTOS;
+
+desvios:
+   GOTO 
+   NUMERO
+   {
+      s_ptr = buscaTabelaSimbolos(&ts, token);
+
+      if ( s_ptr == NULL ){
+         fprintf(stderr, "COMPILATION ERROR!!! label nao declarada\n");
+         exit(1);
+      }
+
+      char aux[128];
+      sprintf(aux, "DSVR R%02d,%d,%d", s_ptr->conteudo.proc.rotulo, s_ptr->nivel, nivel_lexico);
+
+      geraCodigo(NULL, aux);
+   }
+;
 
 %%
 

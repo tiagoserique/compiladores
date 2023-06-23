@@ -6,7 +6,8 @@ typedef enum enumCategoriaSimbolo {
     CAT_VARIAVEL,
     CAT_PARAMETRO,
     CAT_PROCEDIMENTO,
-    CAT_FUNCAO
+    CAT_FUNCAO,
+    CAT_LABEL
 } enumCategoriaSimbolo;
 
 typedef enum tipoVariavel {
@@ -46,7 +47,7 @@ typedef struct procedimento {
 
 // define simbolo
 
-typedef struct tipoConteudo {
+typedef union tipoConteudo {
     variavel var;
     parametro param;
     procedimento proc;

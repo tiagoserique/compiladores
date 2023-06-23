@@ -123,6 +123,18 @@ void imprimeTabelaSimbolos(TabelaSimbolos **ts){
             continue;
         }
 
+         if ( atual->categoria == CAT_LABEL ){
+            fprintf(stderr, "Ident: %s \t|| Cat: %s \t|| Nível: %d \t|| Tipo R: %s \t|| Deslocamento: %d \t|| Rotulo: R%02d \t\t|| QtdParam: %d\n", 
+                atual->identificador, 
+                imprimeCategoria(atual->categoria), 
+                atual->nivel,
+                imprimeTipo(atual->conteudo.proc.tipoRetorno),
+                atual->conteudo.proc.deslocamento,
+                atual->conteudo.proc.rotulo,
+                atual->conteudo.proc.qtdParametros);
+            continue;
+        }
+
     }
     printf("\n");
 

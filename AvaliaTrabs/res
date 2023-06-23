@@ -1,0 +1,33 @@
+program     # program 
+ ident      # exemploErro2 
+ abre_parenteses      # ( 
+ ident      # input 
+ virgula      # , 
+ ident      # output 
+ fecha_parenteses     # ) 
+ pt_virgula      # ; 
+var      # var 
+ ident      # n 
+ virgula      # , 
+ ident      # k 
+ dois pontos     # : 
+ tipo     # integer 
+ pt_virgula      # ; 
+begin     # begin 
+ read     # read 
+ abre_parenteses      # ( 
+ ident      # n 
+ fecha_parenteses     # ) 
+ pt_virgula      # ; 
+ read     # read 
+ abre_parenteses      # ( 
+ ident      # k 
+ fecha_parenteses     # ) 
+ pt_virgula      # ; 
+if      # if 
+ abre_parenteses      # ( 
+ ident      # n 
+ mais     # + 
+ numero      # 1 
+ fecha_parenteses     # ) 
+then      # then 

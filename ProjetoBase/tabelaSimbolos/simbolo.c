@@ -30,6 +30,8 @@ char *imprimeCategoria(int categoria){
             return "procedure";
         case CAT_FUNCAO:
             return "function";
+        case CAT_LABEL:
+            return "label";
         default:
             return "undefined";
     }
